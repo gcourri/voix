@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Voix</title>
+<meta name="description" content="Quinze minutes par jour : maîtriser sa voix en chantant, structurer ses idées en parlant.">
+<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Voix">
+<style>
+/* Minimal, system-native: grouped lists, large titles, one accent. One screen at a time; bottom tab bar. */
+:root{
+  color-scheme:light;
+  --bg:#f5f5f7; --card:#ffffff; --fill:#f0f0f3; --ink:#1d1d1f; --muted:#6e6e73; --line:#d2d2d7;
+  --accent:#0071e3; --accent-soft:#e8f1fc; --on-accent:#ffffff;
+  --ok:#248a3d; --near:#b25000; --off:#d70015; --ok-soft:#e3f5e8;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,"Roboto Mono",monospace;
+  --r:18px;
+  --tabh:64px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#000000; --card:#1c1c1e; --fill:#2c2c2e; --ink:#f5f5f7; --muted:#98989d; --line:#38383a;
+  --accent:#2997ff; --accent-soft:#0b2a4a; --on-accent:#000000;
+  --ok:#30d158; --near:#ffd60a; --off:#ff453a; --ok-soft:#0f2e18; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#000000; --card:#1c1c1e; --fill:#2c2c2e; --ink:#f5f5f7; --muted:#98989d; --line:#38383a;
+  --accent:#2997ff; --accent-soft:#0b2a4a; --on-accent:#000000;
+  --ok:#30d158; --near:#ffd60a; --off:#ff453a; --ok-soft:#0f2e18; color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.47;letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+button,input,textarea{font:inherit;color:inherit;letter-spacing:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+h1,h2{text-wrap:balance}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.screen{padding-block:16px calc(var(--tabh) + 40px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:22px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:15px}
+.xs{font-size:13px}
+
+/* Titles */
+.large{font-size:34px;font-weight:700;letter-spacing:-.025em;line-height:1.1}
+.sub{color:var(--muted);font-size:15px;margin-top:2px}
+.section-label{font-size:13px;text-transform:uppercase;letter-spacing:.02em;color:var(--muted);padding:0 16px 6px}
+.foot-note{font-size:13px;color:var(--muted);padding:6px 16px 0}
+
+/* Grouped lists */
+.group{background:var(--card);border-radius:var(--r);overflow:hidden}
+.cell{display:flex;align-items:center;gap:12px;padding:14px 16px;min-height:52px;position:relative;background:none;border:0;width:100%;text-align:left}
+.cell+.cell::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--line);transform:scaleY(.5)}
+.cell .ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:0 0 auto;font-size:15px;font-weight:700;color:#fff}
+.cell .t{flex:1;min-width:0}
+.cell .t b{display:block;font-weight:600}
+.cell .t span{display:block;font-size:14px;color:var(--muted)}
+.cell .val{color:var(--muted);font-size:15px;white-space:nowrap}
+.cell .chev{color:var(--muted);font-size:20px;line-height:1}
+.cell.cur .t b{color:var(--accent)}
+.ic.chant{background:#5e5ce6}.ic.parole{background:#ff9f0a}.ic.bilan{background:#34c759}.ic.defi{background:#ff375f}.ic.n{background:var(--fill);color:var(--muted)}
+
+/* Buttons */
+.btn{border:0;border-radius:12px;padding:12px 18px;font-weight:600;background:var(--fill);color:var(--ink);line-height:1.2;min-height:44px}
+.btn.pri{background:var(--accent);color:var(--on-accent)}
+.btn.big{width:100%;min-height:52px;font-size:17px;border-radius:14px}
+.btn.sm{min-height:34px;padding:7px 14px;font-size:15px;border-radius:10px}
+.btn.ghost{background:none;color:var(--accent);padding-inline:0}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.row.between{justify-content:space-between}
+
+/* Tab bar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;gap:8px;padding:6px max(12px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-right,0px));background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+.tab{flex:1;max-width:140px;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;color:var(--muted);font-size:11px;font-weight:500}
+.tab svg{width:26px;height:26px}
+.tab[aria-current="page"]{color:var(--accent)}
+
+/* Home */
+.hero-card{background:var(--card);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:16px}
+.hero-card .eyebrow{font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.02em}
+.week{display:flex;gap:6px}
+.week i{flex:1;height:6px;border-radius:3px;background:var(--fill)}
+.week i.on{background:var(--accent)}
+
+/* Session */
+.s-top{display:flex;align-items:center;gap:12px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px}
+.s-top .where{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.s-top .where span{font-size:13px;color:var(--muted);font-weight:600}
+.bar{height:4px;background:var(--fill);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.close{width:34px;height:34px;border-radius:50%;border:0;background:var(--fill);color:var(--muted);font-size:17px;display:grid;place-items:center;flex:0 0 auto}
+.kicker{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.02em}
+.kicker.chant{color:#5e5ce6}.kicker.parole{color:#ff9f0a}.kicker.bilan{color:var(--ok)}
+.s-title{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.15;margin-top:4px}
+.s-body{display:flex;flex-direction:column;gap:16px;min-width:0}
+.s-foot{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:10px max(20px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-right,0px));background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.s-foot .btn{max-width:600px;margin:0 auto;display:block}
+.card{background:var(--card);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card.tint{background:var(--accent-soft)}
+.lede{font-size:19px;line-height:1.45;font-weight:500}
+.prose{font-size:17px;line-height:1.6}
+.label{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.02em}
+.keep{font-weight:600}
+details.more{background:var(--card);border-radius:var(--r);padding:14px 18px}
+details.more summary{cursor:pointer;font-weight:600;color:var(--accent);list-style:none}
+details.more summary::-webkit-details-marker{display:none}
+details.more[open] summary{margin-bottom:10px}
+details.more ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:8px}
+.clock{font-family:var(--mono);font-size:44px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.timer{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.timer.end .clock{color:var(--ok)}
+.say{font-size:17px;font-weight:600;min-height:1.5em}
+.cue{font-size:40px;font-weight:700;text-align:center;letter-spacing:-.02em;min-height:1.2em}
+.result{font-size:16px;line-height:1.5}
+.result b{font-family:var(--mono);font-weight:600}
+.warn{background:color-mix(in srgb,var(--off) 10%,var(--card));border-radius:14px;padding:14px 16px;font-size:15px;display:flex;flex-direction:column;gap:8px}
+.warn b{color:var(--off)}
+.topic{font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.25}
+.banner{background:var(--accent);color:var(--on-accent);border-radius:14px;padding:14px 16px;font-size:18px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-size:14px;padding:6px 12px;border-radius:999px;background:var(--fill);border:0;font-family:var(--mono)}
+.chip.cur{background:var(--accent-soft);color:var(--accent)}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.ko{background:color-mix(in srgb,var(--off) 14%,var(--card));color:var(--off)}
+button.chip{font-family:var(--font)}
+button.chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.counters{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.counter{border:0;border-radius:14px;padding:16px 10px;background:var(--fill);font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px}
+.counter b{font-family:var(--mono);font-size:26px}
+.counter span{font-size:13px;color:var(--muted)}
+.counter:disabled{opacity:.45}
+.take{background:var(--card);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:14px}
+.fields{display:flex;flex-direction:column;gap:10px}
+.fields label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
+.fields input,textarea{background:var(--fill);border:0;border-radius:10px;padding:11px 12px;font-size:17px;font-weight:400;color:var(--ink);width:100%}
+textarea{min-height:84px;resize:vertical}
+.stars{display:flex;gap:8px}
+.stars button{flex:1;height:44px;border-radius:12px;border:0;background:var(--fill);font-weight:600}
+.stars button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.checks{display:flex;flex-direction:column;gap:8px}
+.checks label{display:flex;gap:10px;align-items:center;font-size:16px}
+.checks input{width:22px;height:22px;accent-color:var(--accent)}
+.emo{display:flex;flex-direction:column;gap:8px;padding:14px;background:var(--fill);border-radius:14px}
+.emo b{font-size:17px}
+audio{width:100%;height:40px}
+
+/* Pitch widget */
+.pw{display:flex;flex-direction:column;gap:10px}
+.pw-top{display:flex;justify-content:space-between;align-items:baseline}
+.pw-n{font-size:34px;font-weight:700;letter-spacing:-.02em}
+.pw-sci{color:var(--muted);font-size:14px;font-family:var(--mono);margin-left:6px}
+.pw-c{font-weight:600;font-size:15px}
+.needle{position:relative;height:8px;border-radius:4px;background:var(--fill)}
+.needle .zone{position:absolute;top:0;bottom:0;background:var(--ok-soft);border-radius:4px}
+.needle .mid{position:absolute;top:-4px;bottom:-4px;left:50%;width:2px;margin-left:-1px;background:var(--line)}
+.needle .pin{position:absolute;top:-5px;width:18px;height:18px;margin-left:-9px;left:50%;border-radius:50%;background:var(--muted);box-shadow:0 1px 4px rgb(0 0 0/.25);transition:left .06s linear}
+.roll{width:100%;height:200px;display:block;border-radius:14px;background:var(--fill)}
+.meter{height:8px;border-radius:4px;background:var(--fill);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--accent);transition:width .08s linear}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--card);border-radius:14px;padding:12px 14px}
+.stat b{display:block;font-size:20px;font-weight:700;letter-spacing:-.02em}
+.stat span{font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<!-- AUJOURD'HUI -->
+<main class="screen wrap" id="home">
+  <header><h1 class="large">Aujourd'hui</h1><p class="sub" id="date"></p></header>
+  <div id="homeBody" style="display:flex;flex-direction:column;gap:22px"></div>
+</main>
+
+<!-- PRÉPARER -->
+<main class="screen wrap" id="preparer" hidden>
+  <header><h1 class="large">Préparer</h1><p class="sub">Avant une vraie présentation : pose ta structure, puis répète avec les objections que tu redoutes.</p></header>
+  <div>
+    <p class="section-label">Ta structure</p>
+    <div class="card fields">
+      <label>Sujet<input id="pSubject" placeholder="Ex. : présenter la maquette du site au client"></label>
+      <label>Message clé, en une phrase<input id="pKey" placeholder="Si on ne retient qu'une chose…"></label>
+      <label>Point 1<input id="pP1"></label>
+      <label>Point 2<input id="pP2"></label>
+      <label>Point 3<input id="pP3"></label>
+    </div>
+  </div>
+  <div>
+    <p class="section-label">Objections que tu redoutes</p>
+    <div class="card"><textarea id="pObj" placeholder="Une par ligne. Ex. :&#10;Pourquoi ce choix de couleur ?&#10;C'est trop sobre.&#10;Ce sera prêt quand ?"></textarea></div>
+    <p class="foot-note">L'appli te les posera à voix haute pendant que tu parles.</p>
+  </div>
+  <button class="btn big pri" id="pGo">Répéter (2 prises de 2 min)</button>
+</main>
+
+<!-- PARCOURS -->
+<main class="screen wrap" id="parcours" hidden>
+  <header><h1 class="large">Parcours</h1></header>
+  <div><p class="section-label">Chant · maîtriser ta voix</p><div class="group" id="lChant"></div></div>
+  <div><p class="section-label">Parole · structurer et convaincre</p><div class="group" id="lParole"></div></div>
+  <div><p class="section-label">Défis réels</p><div class="group" id="lDefis"></div><p class="foot-note">La confiance vient surtout de là : parler en vrai, de plus en plus souvent.</p></div>
+  <div><p class="section-label">Mesures</p><div class="stats" id="stats"></div></div>
+  <div><p class="section-label">Réglages</p>
+    <div class="group">
+      <div class="cell"><div class="t"><b>Note de confort</b><span>Les exercices de chant sont placés autour.</span></div><button class="btn sm" id="cDown" aria-label="Plus grave">−</button><span class="val mono" id="cNote">–</span><button class="btn sm" id="cUp" aria-label="Plus aigu">+</button></div>
+      <button class="cell" data-go="libre"><div class="t"><b>Courbe libre</b><span>Voir ta voix en direct</span></div><span class="chev">›</span></button>
+      <button class="cell" id="mtOpen"><div class="t"><b>Tester le micro</b><span>Diagnostic en cas de problème</span></div><span class="chev">›</span></button>
+    </div>
+    <div class="card" id="mtOut" hidden style="margin-top:10px"></div>
+  </div>
+</main>
+
+<!-- COURBE LIBRE -->
+<main class="screen wrap" id="libre" hidden>
+  <div class="s-top"><button class="close" data-go="parcours" aria-label="Fermer">✕</button><div class="where"><span>Courbe libre</span></div></div>
+  <p class="muted small">Chante ou parle : la courbe suit ta voix.</p>
+  <button class="btn big pri" id="lStart">Activer le micro</button>
+  <div id="lBody"></div>
+</main>
+
+<!-- SÉANCE -->
+<main class="screen wrap" id="seance" hidden>
+  <div class="s-top">
+    <button class="close" id="sQuit" aria-label="Quitter la séance">✕</button>
+    <div class="where"><span id="sWhere"></span><div class="bar"><i id="sBar"></i></div></div>
+  </div>
+  <header><p class="kicker" id="sKicker"></p><h1 class="s-title" id="sTitle"></h1></header>
+  <div class="s-body" id="sBody"></div>
+  <div class="s-foot" id="sFoot"><button class="btn big pri" id="sNext">Suivant</button></div>
+</main>
+
+<nav class="tabbar" id="tabbar" aria-label="Navigation">
+  <button class="tab" data-go="" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 12h2M8 8v8M12 5v14M16 9v6M20 12h0"/></svg>Aujourd'hui</button>
+  <button class="tab" data-go="preparer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 8.5h6M9 12h6M9 15.5h4"/></svg>Préparer</button>
+  <button class="tab" data-go="parcours"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M21 19H3"/></svg>Parcours</button>
+</nav>
+
+<script src="content.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
