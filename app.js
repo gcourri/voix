@@ -17,7 +17,8 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 const nowS = () => performance.now() / 1000;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const f1 = v => (Math.round(v * 10) / 10).toString().replace(".", ",");
-const { CHANT, PAROLE, LISTS, REWRITES, FEAR, DEFIS, SPEECH_TEXT, EMO_PHRASE } = window;
+const { CHANT, LISTS, REFLEXES, MINICOURS, SPEECH_TEXT, EMO_PHRASE } = window;
+const REWRITES = [];
 
 /* ============ Notes ============ */
 const NOMS = ["Do", "Do♯", "Ré", "Ré♯", "Mi", "Fa", "Fa♯", "Sol", "Sol♯", "La", "La♯", "Si"];
@@ -33,7 +34,7 @@ const isBlack = m => [1, 3, 6, 8, 10].includes(pc(m));
 const legacy = store.get("av3", null);
 const S = Object.assign({
   centre: legacy && legacy.centre ? legacy.centre : null,
-  c: { mod: 0, sess: 0 }, p: { mod: 0, sess: 0 }, day: 0, defi: 0, defisDone: [],
+  c: { mod: 0, sess: 0 }, r: { mod: 0, sess: 0 }, day: 0, missions: [], coursWeek: null, coursCount: 0,
   conf: [], notes: [], prep: {},
   m: { euh: [], doute: [], souffle: [], stab: [], onset: [], dyn: [], speak: [], range: null, passage: null }
 }, store.get("voix1", {}));
@@ -596,16 +597,6 @@ function partSteps(list, st, block, minIntro, minEx) {
   if (k === 0) return [tag(INTRO(M), block, minIntro, "nouveau"), tag(build(ex[0]), block, minEx, sub)];
   return [tag(RAPPEL(M, k), block, "20 s", "pratique"), tag(build(ex[k % ex.length]), block, minEx, sub)];
 }
-/* Parole : une leçon (ou un rappel) puis deux exercices */
-function paroleSteps() {
-  const M = PAROLE[S.p.mod], k = S.p.sess, ex = M.ex, sub = M.t;
-  const head = k === 0 ? tag(INTRO(M), "parole", "2 min", "nouveau") : tag(RAPPEL(M, k), "parole", "20 s", "pratique");
-  const i1 = k === 0 ? 0 : (2 * k - 1) % ex.length, i2 = k === 0 ? 1 % ex.length : (2 * k) % ex.length;
-  const steps = [head, tag(build(ex[i1]), "parole", "6 min", sub)];
-  if (i2 !== i1) steps.push(tag(build(ex[i2]), "parole", "6 min", sub));
-  return steps;
-}
-
 const CALIB = { t: "Ta zone de voix", run: (el, api) => {
   const c = card(el, `<p class="prose">Une seule fois : l'appli écoute ta voix parlée pour placer les exercices de chant au bon endroit. Appuie sur Commencer et dis normalement : « Bonjour, je m'appelle… et aujourd'hui je travaille ma voix. »</p><button class="btn pri go">Commencer</button><p class="say"></p><p class="small muted">Sans micro : <button class="btn ghost sm lo">voix plutôt grave</button> · <button class="btn ghost sm hi">voix plutôt aiguë</button></p>`);
   const say_ = c.querySelector(".say"), go = c.querySelector(".go");
@@ -622,17 +613,120 @@ const CALIB = { t: "Ta zone de voix", run: (el, api) => {
   };
 } };
 
+const rp = n => (n || 0) + " reprise" + ((n || 0) > 1 ? "s" : "");
+/* ============ Réflexes : boucle écrire, dire, réécouter, refaire ============ */
+const FOCUS2 = ["Dire ma destination plus tôt", "Annoncer le nombre de points", "Finir mes phrases", "Phrases plus courtes", "Appuyer mes mots-clés", "Boucler sur ma destination"];
+const checksFor = i => REFLEXES.slice(0, i + 1).flatMap(r => r.checks);
+const dayIndex = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 6e4) / 864e5);
+function missionToday() { const M = REFLEXES[S.r.mod]; return M.missions[dayIndex() % M.missions.length] }
+function weekKey() { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return dkey(d) }
+
+function rIntro(M) {
+  return { t: M.t, run: el => {
+    card(el, `<p class="lede">${M.why}</p><p class="prose">${M.x}</p>`);
+    card(el, `<p class="label">La règle</p><p class="keep">${M.rule}</p>`, "tint");
+    card(el, `<p class="label">Ta mission pour aujourd'hui</p><p class="prose">${missionToday()}</p>`);
+  } };
+}
+function rRappel(M, k) {
+  return { t: M.t, run: el => {
+    card(el, `<p class="label">Rappel · séance ${k + 1}${M.n < 99 ? " sur " + M.n : ""}</p><p class="keep">${M.rule}</p>`, "tint");
+    el.insertAdjacentHTML("beforeend", `<details class="more"><summary>Relire l'explication</summary><p class="prose">${M.x}</p></details>`);
+  } };
+}
+function exWrite(fields, pool, sec, how) {
+  return { t: "Écrire avant de parler", how: how || "Pose ta structure en quelques mots. C'est ici que ta pensée s'organise : ne rédige pas, note des mots.", run: (el, api) => {
+    if (!api.res.topic) api.res.topic = pick(pool);
+    api.res.fields = fields; api.res.notes = api.res.notes || [];
+    const tc = card(el, `<p class="label">Sujet</p><p class="topic"></p><button class="btn ghost sm nx">Autre sujet</button>`);
+    const show = () => tc.querySelector(".topic").textContent = api.res.topic; show();
+    tc.querySelector(".nx").onclick = () => { api.res.topic = pick(pool); show() };
+    const fc = card(el, `<div class="fields">${fields.map((f, i) => `<label>${f}<input data-i="${i}" value="${esc(api.res.notes[i] || "")}"></label>`).join("")}</div>`);
+    fc.querySelectorAll("input").forEach(inp => inp.oninput = () => { api.res.notes[+inp.dataset.i] = inp.value.trim() });
+    timerBox(el, sec, api);
+  } };
+}
+function notesCard(el, res, extra) {
+  const items = (res.fields || []).map((f, i) => res.notes && res.notes[i] ? `<li><span class="muted">${esc(f)} :</span> ${esc(res.notes[i])}</li>` : "").join("");
+  card(el, `<p class="label">Sujet</p><p class="keep">${esc(res.topic || "")}</p>${items ? `<ul style="margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px">${items}</ul>` : ""}${extra || ""}`);
+}
+function takeBox(el, api, n, sec, onDone) {
+  const c = card(el, `<div class="timer"><span class="clock">${fmt(sec)}</span><button class="btn pri">Démarrer</button></div><div class="pl"></div>`);
+  const b = c.querySelector("button"), clk = c.querySelector(".clock"), pl = c.querySelector(".pl");
+  let on = false, t0 = 0, iv = null, rec = null;
+  const end = () => { if (!on) return; on = false; clearInterval(iv); if (rec) rec.stop(); b.textContent = "Refaire la prise"; if (!rec && onDone) onDone() };
+  b.onclick = async () => {
+    if (on) { end(); return }
+    on = true; t0 = nowS(); b.textContent = "Arrêter"; pl.innerHTML = "";
+    iv = setInterval(() => { const l = sec - (nowS() - t0); clk.textContent = fmt(l); if (l <= 0) { beep(); end() } }, 200);
+    rec = await recordInto(url => { api.res["audio" + n] = url; const au = document.createElement("audio"); au.controls = true; au.src = url; pl.innerHTML = ""; pl.appendChild(au); if (onDone) onDone() });
+    if (!rec) pl.innerHTML = '<p class="xs muted">Sans micro, pas d\'enregistrement : fais quand même la prise à voix haute.</p>';
+    if (!on && rec) rec.stop();
+  };
+  api.onClean(() => { clearInterval(iv); if (rec) rec.stop() });
+}
+function reviewBlock(el, api, n, checks) {
+  const box = document.createElement("div"); box.style.cssText = "display:flex;flex-direction:column;gap:16px"; el.appendChild(box);
+  if (n === 1) {
+    const ac = card(box, `<p class="label">Ta prise</p><div class="au"><p class="xs muted">Chargement…</p></div>`);
+    const fill = (tries) => { const url = api.res.audio1; const au = ac.querySelector(".au"); if (url) { au.innerHTML = ""; const a = document.createElement("audio"); a.controls = true; a.src = url; au.appendChild(a) } else if (tries > 0) setTimeout(() => fill(tries - 1), 300); else au.innerHTML = '<p class="small muted">Pas d\'enregistrement : repense à ta prise.</p>' };
+    fill(6);
+  }
+  api.res["check" + n] = checks.map(() => null);
+  const cc = card(box, `<p class="label">À la réécoute</p>${checks.map((q, i) => `<div class="row between" style="flex-wrap:nowrap"><span style="flex:1">${q}</span><div class="row" style="flex-wrap:nowrap;gap:6px"><button class="chip yn" data-i="${i}" data-v="1" aria-pressed="false">Oui</button><button class="chip yn" data-i="${i}" data-v="0" aria-pressed="false">Non</button></div></div>`).join("")}`);
+  cc.querySelectorAll(".yn").forEach(b => b.onclick = () => { const i = +b.dataset.i; api.res["check" + n][i] = b.dataset.v === "1"; cc.querySelectorAll(`.yn[data-i="${i}"]`).forEach(x => x.setAttribute("aria-pressed", x === b)); upd() });
+  api.res["rep" + n] = 0;
+  const rc = card(box, `<p class="label">Combien de fois t'es-tu repris ?</p><p class="small muted">Chaque « enfin, je veux dire », chaque phrase recommencée.</p><div class="row"><button class="btn sm m">−</button><b class="mono v" style="font-size:24px;min-width:2ch;text-align:center">0</b><button class="btn sm p">+</button></div>`);
+  rc.querySelector(".m").onclick = () => { api.res["rep" + n] = Math.max(0, api.res["rep" + n] - 1); rc.querySelector(".v").textContent = api.res["rep" + n]; upd() };
+  rc.querySelector(".p").onclick = () => { api.res["rep" + n]++; rc.querySelector(".v").textContent = api.res["rep" + n]; upd() };
+  let cmp = null;
+  if (n === 1) {
+    const fc = card(box, `<p class="label">Un seul point à corriger pour la prise suivante</p><div class="chips">${FOCUS2.map(f => `<button class="chip" aria-pressed="false">${f}</button>`).join("")}</div>`);
+    fc.querySelectorAll("button.chip").forEach(c => c.onclick = () => { fc.querySelectorAll("button.chip").forEach(x => x.setAttribute("aria-pressed", "false")); c.setAttribute("aria-pressed", "true"); api.res.focus = c.textContent });
+  } else cmp = card(box, `<p class="result"></p>`, "tint");
+  function upd() {
+    if (!cmp) return;
+    const sc = k => { const a = api.res["check" + k] || []; return a.filter(x => x === true).length + " / " + a.length };
+    cmp.querySelector(".result").innerHTML = `Prise 1 : <b>${sc(1)}</b> oui · ${rp(api.res.rep1)}<br>Prise 2 : <b>${sc(2)}</b> oui · ${rp(api.res.rep2)}`;
+  }
+  upd();
+}
+function exTake(n, sec, how) {
+  return { t: n === 1 ? "Dire" : "Refaire", how, run: (el, api) => {
+    notesCard(el, api.res, n === 2 && api.res.focus ? `<p class="small" style="color:var(--accent);font-weight:600">Objectif de cette prise : ${esc(api.res.focus)}</p>` : "");
+    let shown = false;
+    takeBox(el, api, n, sec, n === 2 ? () => { if (!shown) { shown = true; reviewBlock(el, api, 2, api.res.checks) } } : null);
+  } };
+}
+function exReview() { return { t: "Réécouter", how: "Écoute ta prise une fois, en entier, puis réponds honnêtement.", run: (el, api) => reviewBlock(el, api, 1, api.res.checks) } }
 const BILAN = { t: "Bilan", run: (el, api) => {
-  const F = FEAR[S.day % FEAR.length];
-  card(el, `<p class="label">Ta confiance à l'oral aujourd'hui</p><div class="stars">${[1, 2, 3, 4, 5].map(i => `<button aria-pressed="false" aria-label="${i} sur 5">${i}</button>`).join("")}</div>`);
-  el.querySelectorAll(".stars button").forEach((b, i) => b.onclick = () => { el.querySelectorAll(".stars button").forEach((x, j) => x.setAttribute("aria-pressed", j <= i)); api.res.conf = i + 1 });
-  card(el, `<p class="label">Le regard des autres · ${F[0]}</p><p class="prose">${F[1]}</p>`);
-  if (S.defi < DEFIS.length) card(el, `<p class="label">Défi réel de la semaine</p><p class="keep">${DEFIS[S.defi]}</p><p class="small muted">Coche-le sur l'écran Aujourd'hui quand c'est fait.</p>`);
-  const c = card(el, `<label class="label" for="nextFocus">La prochaine fois, je veux améliorer</label><textarea id="nextFocus" placeholder="Ex. : annoncer mon plan dès la première phrase"></textarea>`);
+  card(el, `<p class="label">Ta mission pour aujourd'hui</p><p class="keep">${missionToday()}</p><p class="small muted">Ce soir, coche-la sur l'écran Aujourd'hui.</p>`);
+  const c = card(el, `<label class="label" for="nextFocus">Ce que je retiens de cette séance</label><textarea id="nextFocus" placeholder="Ex. : quand j'annonce deux points, je ne me perds plus"></textarea>`);
   const ta = c.querySelector("textarea"); ta.oninput = () => { api.res.note = ta.value.trim() };
 } };
 
-function seance() { startSeance("day", [...paroleSteps(), tag(BILAN, "bilan", "1 min")]) }
+function seance() {
+  const i = S.r.mod, M = REFLEXES[i], k = S.r.sess;
+  R.res.checks = checksFor(i);
+  const steps = [
+    tag(k === 0 ? rIntro(M) : rRappel(M, k), "parole", k === 0 ? "2 min" : "20 s", k === 0 ? "nouveau réflexe" : "pratique"),
+    tag(exWrite(M.fields, LISTS[M.topics], 180), "parole", "3 min", M.t),
+    tag(exTake(1, 60, "Une minute, en t'enregistrant. Suis ta structure, sans lire tes notes mot à mot."), "parole", "1 min", M.t),
+    tag(exReview(), "parole", "2 min", M.t),
+    tag(exTake(2, 60, "Même sujet. Concentre-toi sur ton seul point à corriger."), "parole", "3 min", M.t),
+    tag(BILAN, "bilan", "30 s")
+  ];
+  startSeance("day", steps); R.res.checks = checksFor(i);
+}
+function coursSeance() {
+  const steps = [
+    tag({ t: "Le mini-cours de la semaine", run: el => { card(el, `<p class="prose">${MINICOURS.how}</p>`); card(el, `<p class="label">Structure</p><p class="keep">Destination, trois points, un exemple, boucle.</p>`, "tint") } }, "parole", "1 min", "mini-cours"),
+    tag(exWrite(MINICOURS.fields, MINICOURS.topics, 300, "Prépare ton cours en mots-clés. Imagine un élève qui débute."), "parole", "5 min", "mini-cours"),
+    tag(exTake(1, 180, "Fais ton cours en trois minutes, en t'enregistrant."), "parole", "3 min", "mini-cours"),
+    tag(exReview(), "parole", "2 min", "mini-cours")
+  ];
+  startSeance("cours", steps); R.res.checks = MINICOURS.checks;
+}
 function chantSeance() {
   startSeance("chant", [...(S.centre == null ? [tag(CALIB, "chant", "30 s", "réglage")] : []), ...partSteps(CHANT, S.c, "chant", "1 min", "4 min")]);
 }
@@ -641,67 +735,75 @@ function finish() {
   cleanup();
   const body = $("#sBody"); $("#sBar").style.width = "100%"; $("#sFoot").hidden = true; body.innerHTML = "";
   $("#sKicker").className = "kicker bilan"; $("#sKicker").textContent = "Terminé"; $("#sWhere").textContent = "";
+  const back = (label, hash) => { body.insertAdjacentHTML("beforeend", `<button class="btn big pri">${label}</button>`); body.lastElementChild.onclick = () => { location.hash = hash } };
   if (R.kind === "prep") {
     $("#sTitle").textContent = "Répétition terminée";
-    card(body, `<p class="prose">Réécoute tes prises. Avant la vraie présentation : relis ton message clé, trois respirations longues, et « je suis excité ».</p>`);
-    body.insertAdjacentHTML("beforeend", `<button class="btn big pri">Retour</button>`); body.lastElementChild.onclick = () => { location.hash = "preparer" }; return;
+    card(body, `<p class="prose">Réécoute tes prises. Avant la vraie présentation : relis ta destination, respire longuement, et dis-toi « je suis prêt ».</p>`);
+    back("Retour", "preparer"); return;
   }
   if (R.kind === "chant") {
     const st = S.c, M = CHANT[st.mod]; st.sess++; let msg;
     if (st.sess >= M.n && st.mod < CHANT.length - 1) { st.mod++; st.sess = 0; msg = `« ${M.t} » terminé. Prochaine séance : <b>${CHANT[st.mod].t}</b>.` }
     else msg = `Prochaine séance : encore « ${M.t} »${M.n < 99 ? ` (${st.sess + 1}/${M.n})` : ""}.`;
-    save(); $("#sTitle").textContent = "Séance de chant terminée";
-    card(body, `<p class="prose">${msg}</p>`);
-    body.insertAdjacentHTML("beforeend", `<button class="btn big pri">Retour</button>`); body.lastElementChild.onclick = () => { location.hash = "chant" }; return;
+    save(); $("#sTitle").textContent = "Séance de chant terminée"; card(body, `<p class="prose">${msg}</p>`); back("Retour", "chant"); return;
+  }
+  const yes = k => (R.res["check" + k] || []).filter(x => x === true).length, tot = k => (R.res["check" + k] || []).length;
+  if (R.kind === "cours") {
+    S.coursWeek = weekKey(); S.coursCount = (S.coursCount || 0) + 1; save();
+    $("#sTitle").textContent = "Mini-cours terminé";
+    card(body, `<p class="prose">Critères réussis : <b>${yes(1)} / ${tot(1)}</b>, <b>${rp(R.res.rep1)}</b>. Garde cet enregistrement en tête : dans quelques semaines, refais un cours sur le même sujet et compare.</p>`);
+    back("Retour à l'accueil", ""); return;
   }
   markDone(); S.day++;
-  if (R.res.conf) S.conf = S.conf.concat({ d: today(), v: R.res.conf }).slice(-120);
   if (R.res.note) S.notes = S.notes.concat({ d: today(), v: R.res.note }).slice(-120);
+  const k = R.res.check2 ? 2 : 1;
+  if (R.res["rep" + k] != null) push("rep", R.res["rep" + k]);
+  if (tot(k)) push("struct", Math.round(yes(k) / tot(k) * 100));
   $("#sTitle").textContent = "Séance terminée";
-  const lines = [];
-  [["p", PAROLE, "Parole"]].forEach(([key, list, label]) => {
-    const st = S[key], M = list[st.mod]; st.sess++;
-    if (st.sess >= M.n && st.mod < list.length - 1) { lines.push({ key, label, text: `« ${M.t} » terminé. Prochaine séance : <b>${list[st.mod + 1].t}</b>.`, stay: true, prevMod: st.mod, n: M.n }); st.mod++; st.sess = 0 }
-    else lines.push({ key, label, text: `Prochaine séance : encore « ${M.t} »${M.n < 99 ? ` (${st.sess + 1}/${M.n})` : ""}.`, skip: st.mod < list.length - 1, list });
-  });
+  if (R.res.check1) card(body, `<p class="result">Prise 1 : <b>${yes(1)} / ${tot(1)}</b> · ${rp(R.res.rep1)}${R.res.check2 ? `<br>Prise 2 : <b>${yes(2)} / ${tot(2)}</b> · ${rp(R.res.rep2)}` : ""}</p>`, "tint");
+  const st = S.r, M = REFLEXES[st.mod]; st.sess++;
+  const c = card(body, ""); let btn = null;
+  if (st.sess >= M.n && st.mod < REFLEXES.length - 1) {
+    const prev = st.mod; st.mod++; st.sess = 0;
+    c.innerHTML = `<p class="prose">Réflexe « ${M.t} » travaillé. Prochaine séance : <b>${REFLEXES[st.mod].t}</b>.</p>`;
+    btn = ["Rester une séance de plus", () => { S.r.mod = prev; S.r.sess = M.n - 1 }];
+  } else {
+    c.innerHTML = `<p class="prose">Prochaine séance : encore « ${M.t} »${M.n < 99 ? ` (${st.sess + 1}/${M.n})` : ""}.</p>`;
+    if (st.mod < REFLEXES.length - 1) btn = ["Passer au réflexe suivant", () => { S.r.mod++; S.r.sess = 0 }];
+  }
   save();
-  const g = document.createElement("div"); g.className = "group"; body.appendChild(g);
-  lines.forEach(L => {
-    const cell = document.createElement("div"); cell.className = "cell";
-    cell.innerHTML = `<div class="ic ${L.key === "c" ? "chant" : "parole"}">${L.key === "c" ? "♪" : "”"}</div><div class="t"><b>${L.label}</b><span>${L.text}</span></div>`;
-    if (L.stay || L.skip) {
-      const b = document.createElement("button"); b.className = "btn sm"; b.textContent = L.stay ? "Rester" : "Passer";
-      b.onclick = () => { const st = S[L.key]; if (L.stay) { st.mod = L.prevMod; st.sess = L.n - 1 } else { st.mod++; st.sess = 0 } save(); b.disabled = true; b.textContent = "OK" };
-      cell.appendChild(b);
-    }
-    g.appendChild(cell);
-  });
-  body.insertAdjacentHTML("beforeend", `<button class="btn big pri">Retour à l'accueil</button>`); body.lastElementChild.onclick = () => { location.hash = "" };
+  if (btn) { const b = document.createElement("button"); b.className = "btn sm"; b.textContent = btn[0]; b.onclick = () => { btn[1](); save(); b.disabled = true; b.textContent = "C'est noté" }; c.appendChild(b) }
+  back("Retour à l'accueil", "");
 }
 
 /* ============ Écrans ============ */
 function weekHtml() { const l = store.get("voix1:log", {}); let h = ""; const now = new Date(); for (let i = 6; i >= 0; i--) { const d = new Date(now); d.setDate(now.getDate() - i); h += `<i class="${l[dkey(d)] ? "on" : ""}" title="${d.toLocaleDateString("fr-FR", { weekday: "long" })}"></i>` } return h }
-function stateText(M, st) { return st.sess === 0 ? "Nouveau module" : "Pratique · séance " + (st.sess + 1) + (M.n < 99 ? " sur " + M.n : "") }
+function stateText(M, st, noun) { return st.sess === 0 ? (noun || "Nouveau module") : "Pratique · séance " + (st.sess + 1) + (M.n < 99 ? " sur " + M.n : "") }
 function renderHome() {
   const ds = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }); $("#date").textContent = ds.charAt(0).toUpperCase() + ds.slice(1);
   const done = !!store.get("voix1:log", {})[today()], st = streak();
-  const P = PAROLE[S.p.mod], nextP = S.p.mod < PAROLE.length - 1;
+  const M = REFLEXES[S.r.mod], next = S.r.mod < REFLEXES.length - 1;
+  const mis = missionToday(), rec = (S.missions || []).find(x => x.d === today());
+  const coursDone = S.coursWeek === weekKey(), coursTopic = MINICOURS.topics[Math.floor(dayIndex() / 7) % MINICOURS.topics.length];
   $("#homeBody").innerHTML = `
+    <div><p class="section-label">Mission du jour</p><div class="card">
+      <p class="keep" style="font-size:19px;line-height:1.4">${esc(mis)}</p>
+      ${rec ? `<p class="small" style="color:${rec.done ? "var(--ok)" : "var(--muted)"};font-weight:600">${rec.done ? "Faite aujourd'hui. Bravo." : "Pas eu l'occasion aujourd'hui."}</p>` : `<p class="small muted">À appliquer dans tes conversations. Ce soir, dis-moi si tu l'as fait.</p><div class="row"><button class="btn sm pri" id="misYes">Je l'ai fait</button><button class="btn sm" id="misNo">Pas eu l'occasion</button></div>`}
+    </div></div>
     <section class="hero-card">
-      <div class="row between"><span class="eyebrow">Séance du jour · 15 min</span><span class="xs muted">${st ? "Série : " + st + " j" : ""}</span></div>
+      <div class="row between"><span class="eyebrow">Exercice du jour · 10 min</span><span class="xs muted">${st ? "Série : " + st + " j" : ""}</span></div>
       <div class="week">${weekHtml()}</div>
-      <div class="group" style="background:var(--fill)">
-        <div class="cell"><div class="ic parole">”</div><div class="t"><b>${esc(P.t)}</b><span>Module ${S.p.mod + 1} sur ${PAROLE.length} · ${stateText(P, S.p)}</span></div></div>
-      </div>
-      <p class="small muted">${esc(P.why)}</p>
-      <button class="btn big pri" id="go">${done ? "Refaire une séance" : "Commencer"}</button>
-      ${done ? '<p class="small muted" style="text-align:center">Séance du jour faite. Bravo.</p>' : ""}
+      <div class="group" style="background:var(--fill)"><div class="cell"><div class="ic parole">${S.r.mod + 1}</div><div class="t"><b>${esc(M.t)}</b><span>Réflexe ${S.r.mod + 1} sur ${REFLEXES.length} · ${stateText(M, S.r, "À découvrir")}</span></div></div></div>
+      <p class="small muted">Écrire, dire, réécouter, refaire.</p>
+      <button class="btn big pri" id="go">${done ? "Refaire un exercice" : "Commencer"}</button>
     </section>
-    ${S.defi < DEFIS.length ? `<div><p class="section-label">Défi réel de la semaine</p><div class="group"><div class="cell"><div class="ic defi">!</div><div class="t"><b style="font-weight:500">${esc(DEFIS[S.defi])}</b></div><button class="btn sm pri" id="defiDone">Fait</button></div></div></div>` : ""}
-    ${nextP ? `<div class="group"><button class="cell" id="skipP"><div class="t"><b>Passer au module suivant</b><span>${esc(PAROLE[S.p.mod + 1].t)}</span></div><span class="chev">›</span></button></div>` : ""}`;
+    <div><p class="section-label">Mini-cours de la semaine</p><div class="group"><div class="cell"><div class="ic chant">✎</div><div class="t"><b>${esc(coursTopic)}</b><span>${coursDone ? "Fait cette semaine" : "3 minutes pour enseigner un sujet · 10 min en tout"}</span></div><button class="btn sm ${coursDone ? "" : "pri"}" id="goCours">${coursDone ? "Refaire" : "Faire"}</button></div></div></div>
+    ${next ? `<div class="group"><button class="cell" id="skipR"><div class="t"><b>Passer au réflexe suivant</b><span>${esc(REFLEXES[S.r.mod + 1].t)}</span></div><span class="chev">›</span></button></div>` : ""}`;
   $("#go").onclick = seance;
-  const dd = $("#defiDone"); if (dd) dd.onclick = () => { S.defisDone = (S.defisDone || []).concat({ d: today(), i: S.defi }); S.defi++; save(); renderHome() };
-  const sp = $("#skipP"); if (sp) sp.onclick = () => { S.p.mod++; S.p.sess = 0; save(); renderHome() };
+  $("#goCours").onclick = () => { coursSeance(); R.res.topic = coursTopic };
+  const rec_ = v => { S.missions = (S.missions || []).filter(x => x.d !== today()).concat({ d: today(), text: mis, done: v }).slice(-120); save(); renderHome() };
+  const y = $("#misYes"); if (y) { y.onclick = () => rec_(true); $("#misNo").onclick = () => rec_(false) }
+  const sk = $("#skipR"); if (sk) sk.onclick = () => { S.r.mod++; S.r.sess = 0; save(); renderHome() };
 }
 function renderChant() {
   const C = CHANT[S.c.mod];
@@ -724,22 +826,22 @@ function renderChant() {
   $("#cNote").textContent = S.centre != null ? nom(S.centre) : "–";
 }
 function listModules(el, list, st, key) {
-  el.innerHTML = list.map((M, i) => `<button class="cell ${i === st.mod ? "cur" : ""}" data-k="${key}" data-i="${i}"><div class="ic n">${i + 1}</div><div class="t"><b>${esc(M.t)}</b><span>${i === st.mod ? stateText(M, st) : i < st.mod ? "Vu" : ""}</span></div>${i === st.mod ? '<span class="val">En cours</span>' : '<span class="chev">›</span>'}</button>`).join("");
+  el.innerHTML = list.map((M, i) => `<button class="cell ${i === st.mod ? "cur" : ""}" data-k="${key}" data-i="${i}"><div class="ic n">${i + 1}</div><div class="t"><b>${esc(M.t)}</b><span>${i === st.mod ? stateText(M, st, key === "r" ? "À découvrir" : "Nouveau module") : i < st.mod ? "Vu" : ""}</span></div>${i === st.mod ? '<span class="val">En cours</span>' : '<span class="chev">›</span>'}</button>`).join("");
 }
 function renderParcours() {
-  listModules($("#lParole"), PAROLE, S.p, "p");
-  $$("#lParole .cell").forEach(b => b.onclick = () => { const st = S[b.dataset.k]; st.mod = +b.dataset.i; st.sess = 0; save(); renderParcours() });
-  $("#lDefis").innerHTML = DEFIS.map((d, i) => `<button class="cell ${i === S.defi ? "cur" : ""}" data-d="${i}"><div class="ic ${i < S.defi ? "bilan" : "n"}">${i < S.defi ? "✓" : i + 1}</div><div class="t"><b style="font-weight:${i === S.defi ? 600 : 400}">${esc(d)}</b></div></button>`).join("");
-  $$("#lDefis .cell").forEach(b => b.onclick = () => { S.defi = +b.dataset.d; save(); renderParcours() });
-  const conf = S.conf.slice(-5), r = S.m.range;
+  listModules($("#lParole"), REFLEXES, S.r, "r");
+  $$("#lParole .cell").forEach(b => b.onclick = () => { S.r.mod = +b.dataset.i; S.r.sess = 0; save(); renderParcours() });
+  const reps = S.m.rep || [], str = S.m.struct || [], mis = S.missions || [];
+  const avg = a => a.length ? f1(mean(a.map(x => x.v))) : "–";
   const stats = [
-    [last("euh") != null ? f1(last("euh")) + " /min" : "–", "« euh »"],
-    [last("doute") != null ? f1(last("doute")) + " /min" : "–", "mots de doute"],
-    [conf.length ? f1(mean(conf.map(x => x.v))) + " / 5" : "–", "confiance (5 dernières)"],
-    [S.day + "", "séances faites"],
-    [S.defi + " / " + DEFIS.length, "défis réels relevés"]
+    [reps.length ? avg(reps.slice(-5)) : "–", "reprises par prise" + (reps.length > 5 ? " · au début " + avg(reps.slice(0, 5)) : "")],
+    [str.length ? Math.round(mean(str.slice(-5).map(x => x.v))) + " %" : "–", "critères de structure réussis"],
+    [mis.filter(x => x.done).length + " / " + mis.length, "missions faites"],
+    [String(S.day), "exercices faits"],
+    [String(S.coursCount || 0), "mini-cours donnés"]
   ];
   $("#stats").innerHTML = stats.map(s => `<div class="stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join("");
+  $("#lMissions").innerHTML = mis.length ? mis.slice(-7).reverse().map(m => `<div class="cell"><div class="ic ${m.done ? "bilan" : "n"}">${m.done ? "✓" : "–"}</div><div class="t"><b style="font-weight:400">${esc(m.text)}</b><span>${m.d.split("-").reverse().slice(0, 2).join("/")}</span></div></div>`).join("") : '<div class="cell"><div class="t"><span>Tes missions apparaîtront ici.</span></div></div>';
 }
 $("#cDown").onclick = () => { S.centre = Math.max(43, centre() - 1); save(); renderChant() };
 $("#cUp").onclick = () => { S.centre = Math.min(69, centre() + 1); save(); renderChant() };
@@ -750,8 +852,8 @@ Object.entries(PF).forEach(([id, k]) => { const el = $("#" + id); el.value = S.p
 $("#pGo").onclick = () => {
   const P = S.prep, objs = (P.obj || "").split("\n").map(s => s.trim()).filter(Boolean);
   const pts = [P.p1, P.p2, P.p3].filter(Boolean);
-  const summary = `<p class="label">Ta structure</p>${P.key ? `<p class="keep">${esc(P.key)}</p>` : '<p class="muted">Pas de message clé : ajoute-le dans Préparer.</p>'}${pts.length ? `<ol style="margin:0;padding-left:1.2em">${pts.map(p => `<li>${esc(p)}</li>`).join("")}</ol>` : ""}`;
-  const steps = [tag(exTakes({ t: "Répétition", how: "Présente comme pour de vrai. Une objection va tomber pendant que tu parles : réponds, puis reviens à ton message clé.", topic: P.subject || "Ta présentation", summary, sec: 120, takes: 2, pressureList: objs.length ? objs : LISTS.OBJ }), "parole", "5 min", "préparer")];
+  const summary = `<p class="label">Ta structure</p>${P.key ? `<p class="keep">${esc(P.key)}</p>` : '<p class="muted">Pas de destination : ajoute-la dans Préparer.</p>'}${pts.length ? `<ol style="margin:0;padding-left:1.2em">${pts.map(p => `<li>${esc(p)}</li>`).join("")}</ol>` : ""}`;
+  const steps = [tag(exTakes({ t: "Répétition", how: "Présente comme pour de vrai : destination, nombre de points, mots-clés, boucle. Une objection va tomber pendant que tu parles : réponds, puis reviens à ta destination.", topic: P.subject || "Ta présentation", summary, sec: 120, takes: 2, pressureList: objs.length ? objs : LISTS.OBJ }), "parole", "5 min", "préparer")];
   if (objs.length) steps.push(tag(exRapid({ t: "Tes objections, une par une", how: "Pour chacune : reformuler, reconnaître, répondre.", items: objs, n: objs.length, sec: 45, checks: ["Reformulé", "Reconnu ce qui est juste", "Répondu sans me justifier"] }), "parole", "", "préparer"));
   startSeance("prep", steps);
 };
