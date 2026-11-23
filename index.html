@@ -67,7 +67,7 @@ h1,h2{text-wrap:balance}
 .cell .val{color:var(--muted);font-size:15px;white-space:nowrap}
 .cell .chev{color:var(--muted);font-size:20px;line-height:1}
 .cell.cur .t b{color:var(--accent)}
-.ic.chant{background:#5e5ce6}.ic.parole{background:#ff9f0a}.ic.bilan{background:#34c759}.ic.defi{background:#ff375f}.ic.n{background:var(--fill);color:var(--muted)}
+.ic.chant{background:#5e5ce6}.ic.voix{background:#30b0c7}.ic.parole{background:#ff9f0a}.ic.bilan{background:#34c759}.ic.defi{background:#ff375f}.ic.n{background:var(--fill);color:var(--muted)}
 
 /* Buttons */
 .btn{border:0;border-radius:12px;padding:12px 18px;font-weight:600;background:var(--fill);color:var(--ink);line-height:1.2;min-height:44px}
@@ -87,6 +87,7 @@ h1,h2{text-wrap:balance}
 
 /* Home */
 .hero-card{background:var(--card);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:16px}
+header .eyebrow{margin:0 0 2px;font-size:13px;color:#30b0c7;font-weight:600;text-transform:uppercase;letter-spacing:.02em}
 .hero-card .eyebrow{font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.02em}
 .week{display:flex;gap:6px}
 .week i{flex:1;height:6px;border-radius:3px;background:var(--fill)}
@@ -100,7 +101,7 @@ h1,h2{text-wrap:balance}
 .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
 .close{width:34px;height:34px;border-radius:50%;border:0;background:var(--fill);color:var(--muted);font-size:17px;display:grid;place-items:center;flex:0 0 auto}
 .kicker{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.02em}
-.kicker.chant{color:#5e5ce6}.kicker.parole{color:#ff9f0a}.kicker.bilan{color:var(--ok)}
+.kicker.chant{color:#5e5ce6}.kicker.voix{color:#30b0c7}.kicker.parole{color:#ff9f0a}.kicker.bilan{color:var(--ok)}
 .s-title{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.15;margin-top:4px}
 .s-body{display:flex;flex-direction:column;gap:16px;min-width:0}
 .s-foot{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:10px max(20px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-right,0px));background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
@@ -217,9 +218,21 @@ audio{width:100%;height:40px}
   </div>
 </main>
 
-<!-- CHANT (facultatif) -->
+<!-- COACH VOCAL · PARLER -->
+<main class="screen wrap" id="parler" hidden>
+  <header><p class="eyebrow">Coach vocal</p><h1 class="large">Parler</h1><p class="sub">Trouver ton timbre naturel, et le garder quand ça compte.</p></header>
+  <div id="parlerBody" style="display:flex;flex-direction:column;gap:22px"></div>
+  <div><p class="section-label">Modules</p><div class="group" id="lVoix"></div><p class="foot-note">Touche un module pour le travailler.</p></div>
+  <div><p class="section-label">Mesures</p><div class="stats" id="vStats"></div></div>
+  <div><p class="section-label">Réglages</p><div class="group">
+    <div class="cell"><div class="t"><b>Note naturelle</b><span>Mesurée par l'appli, ajustable.</span></div><button class="btn sm" id="vDown" aria-label="Plus grave">−</button><span class="val mono" id="vNote">–</span><button class="btn sm" id="vUp" aria-label="Plus aigu">+</button></div>
+    <button class="cell" data-go="libre"><div class="t"><b>Courbe libre</b><span>Voir ta voix en direct</span></div><span class="chev">›</span></button>
+  </div></div>
+</main>
+
+<!-- COACH VOCAL · CHANTER -->
 <main class="screen wrap" id="chant" hidden>
-  <header><h1 class="large">Chant</h1><p class="sub">Facultatif : pour maîtriser ta voix, quand tu as 5 minutes de plus.</p></header>
+  <header><p class="eyebrow">Coach vocal</p><h1 class="large">Chanter</h1><p class="sub">Maîtriser ta voix, quand tu as 5 minutes de plus.</p></header>
   <div id="chantBody"></div>
   <div><p class="section-label">Modules</p><div class="group" id="lChant"></div></div>
   <div><p class="section-label">Mesures</p><div class="stats" id="cStats"></div></div>
@@ -251,7 +264,8 @@ audio{width:100%;height:40px}
 <nav class="tabbar" id="tabbar" aria-label="Navigation">
   <button class="tab" data-go="" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 12h2M8 8v8M12 5v14M16 9v6M20 12h0"/></svg>Aujourd'hui</button>
   <button class="tab" data-go="preparer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 8.5h6M9 12h6M9 15.5h4"/></svg>Préparer</button>
-  <button class="tab" data-go="chant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>Chant</button>
+  <button class="tab" data-go="parler"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Parler</button>
+  <button class="tab" data-go="chant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>Chanter</button>
   <button class="tab" data-go="parcours"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M21 19H3"/></svg>Parcours</button>
 </nav>
 

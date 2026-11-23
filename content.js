@@ -211,3 +211,102 @@ window.CHANT = [
 
 window.SPEECH_TEXT = "Bonjour à tous. Je vais vous présenter la nouvelle identité visuelle en trois points. D'abord, le constat : l'ancienne image ne parlait plus à nos clients. Ensuite, la proposition : une palette plus claire et une typographie plus lisible. Enfin, la suite : les premiers supports seront prêts dans trois semaines. Ma recommandation est simple : lancer la nouvelle identité dès le mois prochain.";
 window.EMO_PHRASE = [0, 0, 0, 2, 4, 2, 0, 4, 2, 2, 0];
+
+/* ============ Coach vocal · Parler : trouver et garder son timbre naturel ============ */
+window.PARLER = [
+  { t: "Ta note naturelle", n: 2,
+    why: "Ta voix a une hauteur où elle sonne pleine sans effort : c'est ta note naturelle. La plupart des gens parlent un peu au-dessus, surtout sous stress, ou poussent vers le grave pour paraître sérieux. Les deux fatiguent et sonnent faux.",
+    x: "Quand tu approuves quelqu'un sans réfléchir, « mm-hmm », la note qui sort est celle de ta voix au repos. Même chose quand tu comptes sur un soupir détendu, comme affalé dans un canapé. L'appli écoute ces sons, en tire ta note naturelle, puis te montre pendant que tu lis si ta voix reste autour. Ta zone, c'est cette note plus ou moins 3 demi-tons : à l'intérieur, la voix peut monter et descendre librement.",
+    ok: "Ta note naturelle est mesurée, et ta voix de lecture passe plus de 70 % du temps dans ta zone.",
+    deep: ["Refais la mesure le matin et le soir : la voix est souvent plus grave le matin. Garde la mesure faite en milieu de journée.", "Ta note naturelle n'est pas « la plus grave possible ». Une voix forcée vers le bas s'écrase et porte moins.", "Les lèvres fermées pendant le « mm-hmm » doivent vibrer légèrement : c'est le signe que la voix est bien placée."],
+    ex: [
+      { k: "find" },
+      { k: "voice", t: "Lire dans ta zone", how: "Lis le texte à voix haute, comme en réunion. Regarde la courbe de temps en temps : la bande verte, c'est ta zone.", mode: "read" }
+    ] },
+
+  { t: "Le souffle bas", n: 3,
+    why: "Ton timbre repose sur l'air. Quand le souffle est haut et court, la gorge compense en serrant : la voix monte, se durcit, et s'éteint en fin de phrase.",
+    x: "Inspire par le nez en laissant le ventre et les côtes basses s'ouvrir, les épaules immobiles. En parlant, laisse l'air sortir de façon régulière et reprends ton souffle à chaque point, sans attendre d'être vide. Une phrase, un souffle. C'est aussi ce qui crée tes pauses : la respiration et la ponctuation travaillent ensemble.",
+    ok: "Ton « sss » dépasse 20 secondes, et tu comptes jusqu'à 15 sur un souffle sans que la voix monte ni s'éteigne.",
+    deep: ["Main sur le ventre, main sur la poitrine : seule celle du ventre bouge à l'inspiration.", "Respirer à chaque point ralentit ton débit sans que tu y penses, et donne du poids à ce que tu dis.", "Si tu manques d'air en réunion, ce n'est pas un manque de capacité : tu as oublié de reprendre ton souffle aux points."],
+    ex: [
+      { k: "breath" },
+      { k: "timer", t: "Compter sur un souffle", how: "Inspire bas, puis compte à voix normale « un, deux, trois… » sur un seul souffle, sans forcer. Arrête-toi avant d'être vide. Trois fois. La voix doit garder la même hauteur et le même volume du premier au dernier chiffre.", sec: 90 },
+      { k: "voice", t: "Une phrase, un souffle", how: "Lis le texte en reprenant ton souffle à chaque point. Prends ton temps : le silence fait partie du texte.", mode: "read", goal: "fins" }
+    ] },
+
+  { t: "Détendre l'instrument", n: 3,
+    why: "Le timbre naturel, c'est la voix quand rien ne la gêne. Mâchoire serrée, langue crispée, gorge tendue : le stress s'installe dans ces muscles, et la voix devient plus aiguë et plus mince.",
+    x: "On relâche les muscles qui entourent la voix, puis on parle tout de suite après, pour que la voix garde cette détente. Les exercices à bouche semi-fermée, comme les trilles de lèvres ou parler dans une paille, équilibrent la pression d'air : la voix vibre sans effort, et ce réglage se transmet ensuite à la parole.",
+    ok: "Après l'échauffement, ta voix de lecture est plus proche de ta note naturelle qu'avant.",
+    deep: ["Le bâillement ouvre la gorge, le soupir relâche les cordes vocales : combine les deux, puis enchaîne une phrase sur la même détente.", "Masse les muscles de la mâchoire, devant les oreilles, en ouvrant doucement la bouche.", "Une paille dans un verre d'eau, et tu fais des bulles en faisant « ou » : c'est l'exercice préféré des orthophonistes."],
+    ex: [
+      { k: "timer", t: "Relâcher mâchoire et langue", how: "Masse la mâchoire devant les oreilles 20 secondes. Laisse tomber la mâchoire, langue posée derrière les dents du bas. Puis sors la langue et dis « la la la » lentement. Termine par trois soupirs sonores du haut vers le bas.", sec: 90 },
+      { k: "timer", t: "Trilles de lèvres, puis parler", how: "Fais vibrer les lèvres (« brrr ») en glissant doucement sur quelques notes, 30 secondes. Puis enchaîne directement : « brrr… bonjour, je m'appelle… ». Garde la même facilité dans la phrase. Recommence trois fois.", sec: 90 },
+      { k: "voice", t: "Lire sur la détente", how: "Juste après l'échauffement, lis le texte. Compare avec ta mesure habituelle.", mode: "read" }
+    ] },
+
+  { t: "La résonance", n: 3,
+    why: "Une voix qui porte sans forcer vibre dans le visage, à l'avant : lèvres, nez, pommettes. C'est ce qui donne de la présence, même à volume moyen.",
+    x: "Fais « mmm » sur ta note naturelle, lèvres fermées, dents desserrées. Tu dois sentir les lèvres et le nez chatouiller. Puis ouvre sur une syllabe en gardant cette vibration à l'avant : « mmm-mon », « mmm-mais », « mmm-mien ». Ensuite une phrase entière. C'est la base de la thérapie par voix résonante, utilisée par les orthophonistes : beaucoup de son pour peu d'effort.",
+    ok: "Tu sens la vibration dans les lèvres en parlant, et ta voix porte à 5 mètres sans que ta gorge pousse.",
+    deep: ["Si la vibration est dans la gorge, avance le son : imagine qu'il sort par le bout du nez.", "Résonance ne veut pas dire voix nasale. Pince le nez sur une phrase sans « m » ni « n » : elle ne doit pas changer.", "Plus la résonance est à l'avant, moins tu as besoin de volume."],
+    ex: [
+      { k: "timer", t: "Du « mmm » aux mots", how: "« mmm » sur ta note naturelle, 5 secondes. Puis « mmm-mon, mmm-mais, mmm-mien, mmm-moi ». Puis « mon mari mange des marrons ». Puis « mardi, Marie m'a montré la maquette ». Garde la vibration dans les lèvres du début à la fin.", sec: 120 },
+      { k: "voice", t: "Lire avec la vibration", how: "Commence par un « mmm » sur ta note, puis lis le texte en gardant la vibration à l'avant.", mode: "read" },
+      { k: "proj", t: "Porter sans pousser", how: "Dis « Bonjour à tous, merci d'être là » pour quelqu'un à 1 mètre, puis 5 mètres, puis 15 mètres. Le son doit grossir par l'avant et le souffle, jamais par la gorge." }
+    ] },
+
+  { t: "Jusqu'au bout de la phrase", n: 3,
+    why: "C'est ce qui fait la différence entre une voix assurée et une voix qui doute : la fin de phrase. Si elle s'éteint ou s'écrase, le message perd sa force, même avec de bonnes idées.",
+    x: "En fin de phrase, on manque d'air ou on relâche l'attention : la voix descend dans un grésillement, ou on avale les derniers mots. En français, une affirmation descend naturellement à la fin : c'est bien. Mais elle doit descendre sur une voix pleine, jusqu'au dernier mot, puis s'arrêter net. L'appli repère les fins de phrase qui s'éteignent.",
+    ok: "Au moins 80 % de tes fins de phrase restent pleines jusqu'au dernier mot.",
+    deep: ["Pense le dernier mot comme le plus important : souvent, c'est vrai.", "Reprends de l'air avant la fin de ton souffle, pas après.", "Une fin qui monte transforme une affirmation en question. Garde-la descendante quand tu affirmes."],
+    ex: [
+      { k: "voice", t: "Des fins pleines", how: "Lis le texte. Appuie légèrement le dernier mot de chaque phrase, puis silence.", mode: "read", goal: "fins" },
+      { k: "voice", t: "En improvisant", how: "Réponds à la question à voix haute pendant une minute. Phrases courtes, fins pleines.", mode: "free", goal: "fins" }
+    ] },
+
+  { t: "La mélodie", n: 3,
+    why: "Une voix naturelle n'est pas plate : elle monte et descend pour souligner le sens. Le stress l'aplatit, et une voix monotone fait décrocher l'auditoire, même quand le fond est bon.",
+    x: "La mélodie se joue autour de ta note naturelle, pas au-dessus. Pour souligner un mot-clé, tu as trois outils : monter un peu sur lui, le dire plus lentement, ou faire une courte pause juste avant. Une variation de 3 à 5 demi-tons suffit pour une voix vivante. Au-delà, ça devient théâtral.",
+    ok: "Ta voix varie de 2,5 à 5 demi-tons en restant dans ta zone.",
+    deep: ["Une pause avant un mot-clé est souvent plus efficace qu'une montée.", "Lis une phrase comme un journaliste, puis comme si tu racontais une histoire à un ami : sens la différence.", "La mélodie suit l'intention. Si tu sais pourquoi tu dis la phrase, elle trouve sa forme."],
+    ex: [
+      { k: "voice", t: "Faire vivre les mots-clés", how: "Lis le texte en faisant ressortir les mots en gras : un peu plus haut, un peu plus lent, ou après une courte pause.", mode: "read", text: 1, goal: "var" },
+      { k: "voice", t: "Raconter", how: "Réponds à la question à voix haute pendant une minute, comme si tu le racontais à un ami. Laisse la voix bouger.", mode: "free", goal: "var" }
+    ] },
+
+  { t: "Sous pression", n: 3,
+    why: "C'est là que tout se joue : en réunion, devant un client, quand on te coupe. Sous stress, la voix monte de 2 à 4 demi-tons sans que tu t'en rendes compte. Ton timbre ne vaut que si tu le gardes à ce moment-là.",
+    x: "L'appli va t'interrompre avec des objections pendant que tu parles. À chaque fois : une respiration basse avant de répondre, et tu repars sur ta note naturelle. L'appli compare ta hauteur avant et après les objections. L'objectif n'est pas de ne rien ressentir, c'est que ta voix ne le trahisse pas.",
+    ok: "Après une objection, ta voix ne monte pas de plus d'un demi-ton.",
+    deep: ["Le réflexe à construire : objection, inspiration, réponse. La respiration remet la voix en place.", "Sous pression, on accélère. Ralentir fait redescendre la voix tout seul.", "Avant une réunion importante : trois « mm-hmm », une expiration longue, et la première phrase sur ta note."],
+    ex: [
+      { k: "voice", t: "Garder ta note quand on te coupe", how: "Réponds à la question pendant une minute. Quand une objection tombe : inspire, puis réponds sur ta note.", mode: "free", pressure: true },
+      { k: "voice", t: "Lire malgré les interruptions", how: "Lis le texte. Quand une objection tombe : inspire, réponds en une phrase, puis reprends la lecture sur ta note.", mode: "read", text: 2, pressure: true }
+    ] },
+
+  { t: "Au quotidien", n: 9999,
+    why: "Ton timbre s'entretient comme une posture : un peu chaque jour, et surtout dans tes vraies conversations.",
+    x: "Chaque séance alterne une mesure de ta note naturelle, une lecture et une improvisation sous pression. Dans la journée, prends l'habitude de vérifier ta voix aux moments clés : la première phrase d'une réunion, une réponse à une objection, une présentation.",
+    ok: "Ta voix reste dans ta zone plus de 75 % du temps, y compris sous pression.",
+    deep: ["Avant une réunion : trois « mm-hmm », une expiration longue, la première phrase sur ta note.", "Si ta voix monte en pleine discussion : ralentis, respire au prochain point.", "Bois de l'eau dans la journée : des cordes vocales hydratées vibrent plus facilement."],
+    ex: [
+      { k: "voice", t: "Sous pression", how: "Réponds à la question. Objection : inspire, puis réponds sur ta note.", mode: "free", pressure: true },
+      { k: "find" },
+      { k: "voice", t: "Lire dans ta zone", how: "Lis le texte, fins pleines, mots-clés appuyés.", mode: "read", text: 1, goal: "var" }
+    ] }
+];
+
+window.PARLER_WARM = [
+  { t: "Échauffement · soupirs et « mm-hmm »", how: "Trois bâillements-soupirs, du haut vers le bas. Puis cinq « mm-hmm » d'approbation, lèvres fermées. Puis dis « bonjour » sur la note du « mm-hmm »." },
+  { t: "Échauffement · trilles de lèvres", how: "Trilles de lèvres (« brrr ») en glissant doucement vers le haut et vers le bas, 30 secondes. Puis « brrr… bonjour à tous », trois fois." },
+  { t: "Échauffement · mâchoire et « mmm »", how: "Masse la mâchoire devant les oreilles, bouche entrouverte, 20 secondes. Puis « mmm » sur ta note naturelle, en sentant les lèvres vibrer, et « mmm-mon, mmm-mais, mmm-moi »." }
+];
+
+window.PARLER_TEXTS = [
+  "Bonjour à tous. Je vais vous présenter la nouvelle identité visuelle en trois points. D'abord, le constat : l'ancienne image ne parlait plus à nos clients. Ensuite, la proposition : une palette plus claire et une typographie plus lisible. Enfin, la suite : les premiers supports seront prêts dans trois semaines. Ma recommandation est simple : lancer la nouvelle identité dès le mois prochain.",
+  "Ce projet repose sur une idée <b>simple</b>. Nos clients ne lisent pas, ils <b>regardent</b>. Nous avons donc choisi une seule image forte par page, et une typographie <b>généreuse</b>. Le résultat est plus <b>calme</b>, plus <b>lisible</b>, et il se reconnaît de loin. C'est cette <b>clarté</b> que je vous propose de garder.",
+  "Pour cette campagne, nous avons exploré deux pistes. La première joue sur la couleur : un orange franc, qui attire l'œil en rayon. La seconde mise sur la photographie : des portraits en noir et blanc, plus sobres. Je recommande la première. Elle se distingue mieux de la concurrence, et elle fonctionne aussi bien sur une affiche que sur un écran de téléphone."
+];

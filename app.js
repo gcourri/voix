@@ -17,7 +17,7 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 const nowS = () => performance.now() / 1000;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const f1 = v => (Math.round(v * 10) / 10).toString().replace(".", ",");
-const { CHANT, LISTS, REFLEXES, MINICOURS, SPEECH_TEXT, EMO_PHRASE } = window;
+const { CHANT, LISTS, REFLEXES, MINICOURS, SPEECH_TEXT, EMO_PHRASE, PARLER, PARLER_WARM, PARLER_TEXTS } = window;
 const REWRITES = [];
 
 /* ============ Notes ============ */
@@ -34,7 +34,7 @@ const isBlack = m => [1, 3, 6, 8, 10].includes(pc(m));
 const legacy = store.get("av3", null);
 const S = Object.assign({
   centre: legacy && legacy.centre ? legacy.centre : null,
-  c: { mod: 0, sess: 0 }, r: { mod: 0, sess: 0 }, day: 0, missions: [], coursWeek: null, coursCount: 0,
+  c: { mod: 0, sess: 0 }, r: { mod: 0, sess: 0 }, v: { mod: 0, sess: 0 }, timbre: null, day: 0, missions: [], coursWeek: null, coursCount: 0,
   conf: [], notes: [], prep: {},
   m: { euh: [], doute: [], souffle: [], stab: [], onset: [], dyn: [], speak: [], range: null, passage: null }
 }, store.get("voix1", {}));
@@ -209,7 +209,7 @@ const R = { steps: [], i: 0, res: {}, alive: false, clean: [], tok: 0, kind: "" 
 let wakeLock = null;
 async function wake() { try { wakeLock = await navigator.wakeLock.request("screen") } catch (e) {} }
 function cleanup() { R.alive = false; R.clean.forEach(f => { try { f() } catch (e) {} }); R.clean = []; try { speechSynthesis.cancel() } catch (e) {} }
-const KICK = { chant: "Chant", parole: "Parole", bilan: "Bilan" };
+const KICK = { chant: "Chanter", voix: "Parler", parole: "Communication", bilan: "Bilan" };
 function startSeance(kind, steps) { R.kind = kind; R.steps = steps; R.i = 0; R.res = {}; location.hash = "seance"; renderStep(); wake() }
 function renderStep() {
   cleanup(); R.alive = true; const tok = ++R.tok;
@@ -467,6 +467,133 @@ function exSpeech(spec) {
 }
 function exProj(spec) { return { t: spec.t, how: spec.how, run: (el, api) => { timerBox(el, 150, api); const r = recorder(el, { max: 160, label: "M'enregistrer" }); api.onClean(() => r.stop()) } } }
 
+/* ============ Coach vocal · Parler ============ */
+const timbre = () => S.timbre != null ? S.timbre : centre() - 4;
+const ZONE = 3;
+function zoneWidget(el) {
+  el.insertAdjacentHTML("beforeend", `<div class="card pw"><div class="pw-top"><div><span class="pw-n">–</span><span class="pw-sci"></span></div><span class="pw-c muted">${A.on ? "J'écoute" : "Micro en attente"}</span></div><canvas class="roll"></canvas><p class="xs muted" style="margin:0">Bande verte : ta zone, autour de ta note naturelle (${nom(timbre())}).</p></div>`);
+  const root = el.lastElementChild, cv = root.querySelector("canvas"); const T = timbre(); let sm = null;
+  const draw = () => { const t = nowS(); drawRoll(cv, A.hist, { lo: T - 9, hi: T + 9, t0: t - 8, t1: t, target: T, tol: ZONE * 50, empty: A.on ? null : "La courbe apparaîtra ici" }) };
+  const f = s => {
+    if (!root.isConnected) { A.fn.delete(f); return }
+    if (s.midi != null && Math.abs(s.midi - T) < 12) {
+      sm = sm == null ? s.midi : sm + (s.midi - sm) * .08; const d = sm - T;
+      root.querySelector(".pw-n").textContent = nom(sm); root.querySelector(".pw-sci").textContent = sci(sm);
+      const c = root.querySelector(".pw-c"); c.classList.remove("muted");
+      c.textContent = Math.abs(d) <= ZONE ? "Dans ta zone" : d > 0 ? "Tu montes" : "Tu descends";
+      c.style.color = Math.abs(d) <= ZONE ? colors["--ok"] : Math.abs(d) <= ZONE + 2 ? colors["--near"] : colors["--off"];
+    }
+    draw();
+  };
+  A.fn.add(f); requestAnimationFrame(draw);
+  return { destroy() { A.fn.delete(f) } };
+}
+
+function exFind() {
+  return { t: "Trouver ta note naturelle", how: "Appuie sur Commencer, puis : cinq « mm-hmm » comme pour approuver quelqu'un, lèvres fermées, sans réfléchir. Ensuite compte de 1 à 10 sur un soupir détendu, comme affalé dans un canapé.", run: (el, api) => {
+    const c = card(el, `<button class="btn pri go">Commencer</button><p class="say muted"></p>`);
+    const go = c.querySelector(".go"), say_ = c.querySelector(".say"); const res = document.createElement("p"); res.className = "result";
+    let on = false, v = [], f = null, w = null, iv = null, t0 = 0;
+    const stop = () => {
+      on = false; api.off(f); clearInterval(iv); go.textContent = "Recommencer"; say_.textContent = "";
+      if (v.length < 25) { res.textContent = "Je n'ai pas assez entendu ta voix. Rapproche le téléphone et recommence."; return }
+      const lo = pct(v, .1), hi = pct(v, .9), core = v.filter(x => x >= lo && x <= hi), T = Math.round(median(core) * 2) / 2;
+      const prev = S.timbre; S.timbre = T; if (S.centre == null) S.centre = Math.max(45, Math.min(67, Math.round(T + 4))); save(); push("timbre", T);
+      res.innerHTML = `Ta note naturelle : <b>${nom(T)}</b> (${Math.round(m2f(T))} Hz). Ta zone va de ${nom(T - ZONE)} à ${nom(T + ZONE)}.` +
+        (prev != null && Math.abs(prev - T) >= 1 ? ` La dernière fois : ${nom(prev)}. Un écart d'un ou deux demi-tons d'un jour à l'autre est normal.` : "");
+    };
+    go.onclick = async () => {
+      if (on) { stop(); return }
+      if (!(await startMic())) { micHelp(el, () => go.click()); return }
+      if (!w) { w = pitchWidget(el, { half: 9, tol: 50 }); api.onClean(() => w.destroy()); el.appendChild(res) }
+      on = true; v = []; res.textContent = ""; go.textContent = "J'ai fini"; t0 = nowS();
+      iv = setInterval(() => { const s = nowS() - t0; say_.textContent = s < 8 ? "Cinq « mm-hmm »…" : "Compte de 1 à 10 sur un soupir…"; if (s > 25) stop() }, 300);
+      f = s => { if (!api.alive()) { api.off(f); return } if (s.midi != null) v.push(s.midi) }; api.on(f);
+    };
+    api.onClean(() => clearInterval(iv));
+  } };
+}
+
+/* Analyse d'une prise parlée : zone, variation, fins de phrase, effet des objections */
+function analyseVoice(fr, T, marks) {
+  const voiced = fr.filter(s => s.midi != null && Math.abs(s.midi - T) < 12);
+  if (voiced.length < 40) return null;
+  const ms = voiced.map(s => s.midi), md = median(ms), lo = pct(ms, .1), hi = pct(ms, .9);
+  const out = { md, off: md - T, zone: Math.round(voiced.filter(s => Math.abs(s.midi - T) <= ZONE).length / voiced.length * 100), vari: (hi - lo) / 2 };
+  // Segments : groupes de parole séparés par plus de 0,35 s sans voix
+  const segs = []; let cur = null, lastV = -9;
+  for (const s of fr) {
+    if (s.midi != null && Math.abs(s.midi - T) < 12) { if (!cur || s.t - lastV > .35) { cur = []; segs.push(cur) } cur.push(s); lastV = s.t }
+  }
+  const long = segs.filter(g => g[g.length - 1].t - g[0].t > .9);
+  if (long.length) {
+    let good = 0;
+    for (const g of long) {
+      const tEnd = g[g.length - 1].t, tail = g.filter(s => s.t > tEnd - .3), body = g.filter(s => s.t <= tEnd - .3);
+      if (!tail.length || !body.length) { good++; continue }
+      const rB = median(body.map(s => s.rms)), rT = median(tail.map(s => s.rms)), pT = median(tail.map(s => s.midi));
+      if (rT >= rB * .35 && pT >= T - 5) good++;
+    }
+    out.fins = Math.round(good / long.length * 100); out.nseg = long.length;
+  }
+  if (marks && marks.length) {
+    const before = voiced.filter(s => s.t < marks[0]).map(s => s.midi);
+    const after = voiced.filter(s => marks.some(m => s.t > m && s.t < m + 8)).map(s => s.midi);
+    if (before.length > 20 && after.length > 20) out.jump = median(after) - median(before);
+  }
+  return out;
+}
+
+function exVoice(spec) {
+  return { t: spec.t, how: spec.how, run: (el, api) => {
+    const free = spec.mode === "free", sec = spec.sec || 60;
+    let topic = free ? pick(LISTS.QUICK) : null;
+    const text = free ? "" : PARLER_TEXTS[spec.text != null ? spec.text : (S.day + S.v.sess) % PARLER_TEXTS.length];
+    const c = card(el, free ? `<p class="label">Question</p><p class="keep topic">${esc(topic)}</p><button class="btn ghost sm other">Une autre question</button>` : `<p class="prose">${text}</p>`);
+    const ctl = card(el, `<div class="timer"><span class="clock">${free ? fmt(sec) : "0:00"}</span><button class="btn pri go">${free ? "Je commence" : "Je commence à lire"}</button></div>${spec.pressure ? '<p class="small muted obj" style="margin:0">Des objections vont tomber pendant que tu parles.</p>' : ""}`);
+    const go = ctl.querySelector(".go"), clk = ctl.querySelector(".clock"), objEl = ctl.querySelector(".obj");
+    const ot = c.querySelector(".other"); if (ot) ot.onclick = () => { topic = pick(LISTS.QUICK); c.querySelector(".topic").textContent = topic };
+    const res = document.createElement("div");
+    let on = false, fr = [], f = null, w = null, iv = null, t0 = 0, marks = [], plan = [], mute = 0;
+    const stop = () => {
+      on = false; api.off(f); clearInterval(iv); try { speechSynthesis.cancel() } catch (e) {} go.textContent = "Refaire";
+      const T = timbre(), r = analyseVoice(fr, T, marks);
+      if (!r) { res.innerHTML = '<p class="result">Je n\'ai pas assez entendu ta voix. Parle un peu plus longtemps, téléphone plus près.</p>'; return }
+      const lines = [];
+      lines.push(`Dans ta zone : <b>${r.zone} %</b> du temps.`);
+      lines.push(`Ta voix tourne autour de <b>${nom(r.md)}</b>` + (Math.abs(r.off) < 1 ? ", pile sur ta note naturelle." : r.off > 0 ? `, ${f1(r.off)} demi-ton${r.off >= 2 ? "s" : ""} au-dessus de ta note naturelle.` : `, ${f1(-r.off)} demi-ton${-r.off >= 2 ? "s" : ""} en dessous de ta note naturelle.`));
+      lines.push(`Variation : <b>${f1(r.vari)} demi-tons</b>` + (r.vari < 1.8 ? " : plutôt plate, appuie davantage tes mots-clés." : r.vari <= 5 ? " : voix vivante." : " : très expressive, garde-la dans ta zone."));
+      if (r.fins != null) lines.push(`Fins de phrase pleines : <b>${r.fins} %</b> (${r.nseg} phrases).`);
+      if (r.jump != null) lines.push(`Après les objections, ta voix ${Math.abs(r.jump) < 1 ? "est restée stable" : r.jump > 0 ? `est montée de <b>${f1(r.jump)} demi-ton${r.jump >= 2 ? "s" : ""}</b>` : `est descendue de ${f1(-r.jump)} demi-ton${-r.jump >= 2 ? "s" : ""}`}.`);
+      let tip;
+      if (r.jump != null && r.jump >= 1) tip = "Sous la pression, ta voix monte. La prochaine fois : objection, inspiration basse, puis réponse.";
+      else if (r.off >= 2) tip = "Ta voix est montée au-dessus de ta note. Ralentis, respire aux points, et repars d'un « mm-hmm ».";
+      else if (r.off <= -2) tip = "Tu pousses ta voix vers le grave. Laisse-la remonter vers ta note naturelle : elle portera mieux.";
+      else if (r.fins != null && r.fins < 80) tip = "Des fins de phrase s'éteignent. Reprends de l'air avant d'être vide, et appuie le dernier mot.";
+      else if (r.vari < 1.8) tip = "Ton timbre est bien placé. Fais maintenant bouger la mélodie autour.";
+      else tip = "Timbre bien placé. Refais-le demain pour l'ancrer.";
+      res.innerHTML = `<div class="card tint"><p class="result" style="margin:0">${lines.join("<br>")}</p></div><p class="prose">${tip}</p>`;
+      push("zone", r.zone); push("pvar", +r.vari.toFixed(1)); if (r.fins != null) push("fins", r.fins); if (r.jump != null) push("jump", +r.jump.toFixed(1));
+    };
+    go.onclick = async () => {
+      if (on) { stop(); return }
+      if (!(await startMic())) { micHelp(el, () => go.click()); return }
+      if (!w) { w = zoneWidget(el); api.onClean(() => w.destroy()); el.appendChild(res) }
+      on = true; fr = []; marks = []; res.innerHTML = ""; go.textContent = free ? "J'ai fini" : "J'ai fini de lire"; t0 = nowS();
+      plan = spec.pressure ? (free ? [14 + Math.random() * 6, 34 + Math.random() * 8] : [10 + Math.random() * 5, 24 + Math.random() * 6]) : [];
+      const objs = [...LISTS.OBJ].sort(() => Math.random() - .5);
+      iv = setInterval(() => {
+        const s = nowS() - t0; clk.textContent = free ? fmt(sec - s) : fmt(s);
+        if (plan.length && s >= plan[0]) { plan.shift(); const o = objs.pop(); marks.push(nowS()); mute = nowS() + 1; say(o); if (objEl) objEl.innerHTML = "<b>« " + esc(o) + " »</b> Inspire, puis réponds sur ta note." }
+        if (free && s >= sec) { beep(); stop() } else if (s > 240) stop();
+      }, 250);
+      f = s => { if (!api.alive()) { api.off(f); return } let tts = false; try { tts = speechSynthesis.speaking } catch (e) {} if (tts || s.t < mute) { if (tts) mute = s.t + .4; return } fr.push(s) };
+      api.on(f);
+    };
+    api.onClean(() => clearInterval(iv));
+  } };
+}
+
 /* ============ Exercices de parole ============ */
 const FOCUS = ["Message clé plus tôt", "Annoncer le plan", "Moins de mots de doute", "Moins de « euh »", "Phrases plus courtes", "Plus de pauses", "Revenir au fil", "Fins de phrase affirmées"];
 const COUNTERS = { euh: "« euh »", doute: "mot de doute" };
@@ -570,6 +697,8 @@ function build(spec) {
     case "emotion": return exEmotion();
     case "speech": return exSpeech(spec);
     case "proj": return exProj(spec);
+    case "find": return exFind();
+    case "voice": return exVoice(spec);
     case "takes": return exTakes(spec);
     case "rapid": return exRapid(spec);
     case "rewrite": return exRewrite(spec);
@@ -731,6 +860,18 @@ function chantSeance() {
   startSeance("chant", [...(S.centre == null ? [tag(CALIB, "chant", "30 s", "réglage")] : []), ...partSteps(CHANT, S.c, "chant", "1 min", "4 min")]);
 }
 
+function voixSeance() {
+  const W = PARLER_WARM[(S.day + S.v.sess + S.v.mod) % PARLER_WARM.length];
+  const steps = [];
+  if (S.timbre == null && PARLER[S.v.mod].ex[0].k !== "find") steps.push(tag(exFind(), "voix", "1 min", "réglage"));
+  steps.push(tag(exTimer({ t: W.t, how: W.how, sec: 60 }), "voix", "1 min", "échauffement"));
+  steps.push(...partSteps(PARLER, S.v, "voix", "1 min", "3 min"));
+  startSeance("voix", steps);
+}
+function checkSeance() {
+  startSeance("check", [tag(exVoice({ t: "Contrôle express", how: "Trois « mm-hmm » pour te caler, puis lis le texte normalement.", mode: "read", text: 0 }), "voix", "1 min", "contrôle")]);
+}
+
 function finish() {
   cleanup();
   const body = $("#sBody"); $("#sBar").style.width = "100%"; $("#sFoot").hidden = true; body.innerHTML = "";
@@ -747,6 +888,13 @@ function finish() {
     else msg = `Prochaine séance : encore « ${M.t} »${M.n < 99 ? ` (${st.sess + 1}/${M.n})` : ""}.`;
     save(); $("#sTitle").textContent = "Séance de chant terminée"; card(body, `<p class="prose">${msg}</p>`); back("Retour", "chant"); return;
   }
+  if (R.kind === "voix") {
+    const st = S.v, M = PARLER[st.mod]; st.sess++; let msg;
+    if (st.sess >= M.n && st.mod < PARLER.length - 1) { st.mod++; st.sess = 0; msg = `« ${M.t} » terminé. Prochaine séance : <b>${PARLER[st.mod].t}</b>.` }
+    else msg = `Prochaine séance : encore « ${M.t} »${M.n < 99 ? ` (${st.sess + 1}/${M.n})` : ""}.`;
+    save(); $("#sTitle").textContent = "Séance de voix terminée"; card(body, `<p class="prose">${msg}</p>`); back("Retour", "parler"); return;
+  }
+  if (R.kind === "check") { $("#sTitle").textContent = "Contrôle terminé"; card(body, `<p class="prose">Dans la journée, cale ta première phrase de chaque réunion sur ta note naturelle.</p>`); back("Retour", "parler"); return }
   const yes = k => (R.res["check" + k] || []).filter(x => x === true).length, tot = k => (R.res["check" + k] || []).length;
   if (R.kind === "cours") {
     S.coursWeek = weekKey(); S.coursCount = (S.coursCount || 0) + 1; save();
@@ -825,6 +973,33 @@ function renderChant() {
   ].map(x => `<div class="stat"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
   $("#cNote").textContent = S.centre != null ? nom(S.centre) : "–";
 }
+function renderParler() {
+  const M = PARLER[S.v.mod], T = S.timbre;
+  $("#parlerBody").innerHTML = `<section class="hero-card">
+      <span class="eyebrow">Séance de voix · 5 min</span>
+      <div class="group" style="background:var(--fill)"><div class="cell"><div class="ic voix">${S.v.mod + 1}</div><div class="t"><b>${esc(M.t)}</b><span>Module ${S.v.mod + 1} sur ${PARLER.length} · ${stateText(M, S.v)}</span></div></div></div>
+      <p class="small muted">Échauffement d'une minute, puis l'exercice du module.</p>
+      <button class="btn big pri" id="goVoix">Commencer</button></section>
+    <div class="group"><button class="cell" id="goCheck"><div class="ic voix">✓</div><div class="t"><b>Contrôle express · 1 min</b><span>${T != null ? "Vérifie que ta voix est sur ta note aujourd'hui" : "Mesure d'abord ta note naturelle"}</span></div><span class="chev">›</span></button></div>
+    <div><p class="section-label">Avant une réunion · 30 s</p><div class="card"><p class="prose" style="margin:0">Trois « mm-hmm », lèvres fermées. Une longue expiration. Ta première phrase sur la note du « mm-hmm ». Et si ta voix monte en cours de route : ralentis, respire au prochain point.</p></div></div>`;
+  $("#goVoix").onclick = voixSeance;
+  $("#goCheck").onclick = () => T != null ? checkSeance() : startSeance("check", [tag(exFind(), "voix", "1 min", "réglage")]);
+  listModules($("#lVoix"), PARLER, S.v, "v");
+  $$("#lVoix .cell").forEach(b => b.onclick = () => { S.v.mod = +b.dataset.i; S.v.sess = 0; save(); renderParler() });
+  const a = k => S.m[k] || [], avg = (arr, n) => arr.length ? Math.round(mean(arr.slice(n).map(x => x.v))) : null;
+  const z = a("zone"), fi = a("fins"), j = a("jump");
+  $("#vStats").innerHTML = [
+    [T != null ? nom(T) : "–", "note naturelle" + (T != null ? " · " + Math.round(m2f(T)) + " Hz" : "")],
+    [z.length ? avg(z, -5) + " %" : "–", "dans ta zone" + (z.length > 5 ? " · au début " + avg(z.slice(0, 5), 0) + " %" : "")],
+    [last("pvar") != null ? f1(last("pvar")) + " dt" : "–", "variation de la voix"],
+    [fi.length ? avg(fi, -5) + " %" : "–", "fins de phrase pleines"],
+    [j.length ? (last("jump") > 0 ? "+" : "") + f1(last("jump")) + " dt" : "–", "écart après une objection"],
+    [(S.m.souffle || []).length ? f1(Math.max(...S.m.souffle.map(x => x.v))) + " s" : "–", "record de souffle"]
+  ].map(x => `<div class="stat"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
+  $("#vNote").textContent = T != null ? nom(T) : "–";
+}
+$("#vDown").onclick = () => { S.timbre = (S.timbre != null ? S.timbre : timbre()) - .5; save(); renderParler() };
+$("#vUp").onclick = () => { S.timbre = (S.timbre != null ? S.timbre : timbre()) + .5; save(); renderParler() };
 function listModules(el, list, st, key) {
   el.innerHTML = list.map((M, i) => `<button class="cell ${i === st.mod ? "cur" : ""}" data-k="${key}" data-i="${i}"><div class="ic n">${i + 1}</div><div class="t"><b>${esc(M.t)}</b><span>${i === st.mod ? stateText(M, st, key === "r" ? "À découvrir" : "Nouveau module") : i < st.mod ? "Vu" : ""}</span></div>${i === st.mod ? '<span class="val">En cours</span>' : '<span class="chev">›</span>'}</button>`).join("");
 }
@@ -882,7 +1057,7 @@ $("#mtOpen").onclick = async () => {
 };
 
 /* ============ Navigation ============ */
-const SCREENS = ["home", "preparer", "chant", "parcours", "libre", "seance"];
+const SCREENS = ["home", "preparer", "parler", "chant", "parcours", "libre", "seance"];
 function route() {
   let h = location.hash.slice(1);
   if (h === "seance" && !R.steps.length) h = "";
@@ -894,6 +1069,7 @@ function route() {
   if (sc === "home") renderHome();
   if (sc === "parcours") renderParcours();
   if (sc === "chant") renderChant();
+  if (sc === "parler") renderParler();
   if (sc !== "seance" && wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null }
   window.scrollTo({ top: 0 });
 }

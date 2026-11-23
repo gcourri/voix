@@ -7,6 +7,7 @@ Structurer ses idées et ses présentations, un peu chaque jour.
 - **Les réflexes** : la destination, le nombre annoncé, finir sa phrase, les mots-clés, boucler, intention · choix · effet, puis tout assembler.
 - **Mini-cours de la semaine** : enseigner un sujet de direction artistique en 3 minutes.
 - **Préparer** : répéter une vraie présentation, avec ses propres objections posées à voix haute.
-- **Chant** (facultatif) : modules pour maîtriser sa voix, avec courbe de hauteur au micro.
+- **Coach vocal · Parler** : trouver sa note naturelle (« mm-hmm »), puis la garder en lisant, en improvisant et sous objections. Mesures : temps passé dans sa zone, variation, fins de phrase pleines, écart après une objection.
+- **Coach vocal · Chanter** (facultatif) : modules pour maîtriser sa voix, avec courbe de hauteur au micro.
 
 Application web statique (HTML, CSS, JS, sans dépendance). Les données restent dans le navigateur.
