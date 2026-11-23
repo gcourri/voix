@@ -128,7 +128,8 @@ window.PAROLE = [
     ok: "Après chaque interruption, tu reviens au fil avec ta phrase de retour en moins de 20 secondes.",
     deep: ["Le message clé est ton point d'ancrage : sans lui, pas de retour possible.", "Si tu as un trou : « Je reprends » et répète ta dernière idée. Personne ne s'en souviendra.", "Dans la vraie vie : en réunion, conclus ton intervention par « Pour résumer : » et ton message clé."],
     ex: [
-      { k: "takes", t: "Interruptions et retour", how: "Parle 90 secondes. L'appli t'interrompt avec une digression : réponds brièvement, puis « Pour revenir à l'essentiel ». Deux prises.", topics: "PROJETS", sec: 90, takes: 2, fields: ["Message clé"], pressure: "DIGRESSIONS" }
+      { k: "takes", t: "Interruptions et retour", how: "Parle 90 secondes. L'appli t'interrompt avec une digression : réponds brièvement, puis « Pour revenir à l'essentiel ». Deux prises.", topics: "PROJETS", sec: 90, takes: 2, fields: ["Message clé"], pressure: "DIGRESSIONS" },
+      { k: "rapid", t: "Retours éclair", how: "Choisis un projet et son message clé. À chaque digression : une réponse d'une phrase, puis « Pour revenir à l'essentiel : » et ton message clé.", list: "DIGRESSIONS", n: 5, sec: 25, checks: ["Réponse courte à la digression", "Phrase de retour", "Message clé redit"] }
     ] },
 
   { t: "Présenter un projet", n: 3,

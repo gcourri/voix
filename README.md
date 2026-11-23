@@ -1,6 +1,6 @@
 # Voix
 
-Quinze minutes par jour pour maîtriser sa voix (chant) et structurer ses idées à l'oral (parole).
+Quinze minutes par jour pour structurer ses idées et prendre la parole avec assurance. Un onglet Chant, facultatif, pour travailler sa voix.
 
 - **Chant (5 min)** : souffle, attaque, registres, résonance, nuances, agilité, émotion, voix parlée. Courbe de hauteur en direct au micro.
 - **Parole (10 min)** : message clé, réponse d'abord, parler de ses doutes, gagner du temps sous pression, garder le fil, présenter un projet, répondre aux objections. Prises enregistrées, interruptions à voix haute.

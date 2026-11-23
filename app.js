@@ -596,6 +596,15 @@ function partSteps(list, st, block, minIntro, minEx) {
   if (k === 0) return [tag(INTRO(M), block, minIntro, "nouveau"), tag(build(ex[0]), block, minEx, sub)];
   return [tag(RAPPEL(M, k), block, "20 s", "pratique"), tag(build(ex[k % ex.length]), block, minEx, sub)];
 }
+/* Parole : une leçon (ou un rappel) puis deux exercices */
+function paroleSteps() {
+  const M = PAROLE[S.p.mod], k = S.p.sess, ex = M.ex, sub = M.t;
+  const head = k === 0 ? tag(INTRO(M), "parole", "2 min", "nouveau") : tag(RAPPEL(M, k), "parole", "20 s", "pratique");
+  const i1 = k === 0 ? 0 : (2 * k - 1) % ex.length, i2 = k === 0 ? 1 % ex.length : (2 * k) % ex.length;
+  const steps = [head, tag(build(ex[i1]), "parole", "6 min", sub)];
+  if (i2 !== i1) steps.push(tag(build(ex[i2]), "parole", "6 min", sub));
+  return steps;
+}
 
 const CALIB = { t: "Ta zone de voix", run: (el, api) => {
   const c = card(el, `<p class="prose">Une seule fois : l'appli écoute ta voix parlée pour placer les exercices de chant au bon endroit. Appuie sur Commencer et dis normalement : « Bonjour, je m'appelle… et aujourd'hui je travaille ma voix. »</p><button class="btn pri go">Commencer</button><p class="say"></p><p class="small muted">Sans micro : <button class="btn ghost sm lo">voix plutôt grave</button> · <button class="btn ghost sm hi">voix plutôt aiguë</button></p>`);
@@ -623,14 +632,9 @@ const BILAN = { t: "Bilan", run: (el, api) => {
   const ta = c.querySelector("textarea"); ta.oninput = () => { api.res.note = ta.value.trim() };
 } };
 
-function seance() {
-  const steps = [
-    ...(S.centre == null ? [tag(CALIB, "chant", "30 s", "réglage")] : []),
-    ...partSteps(CHANT, S.c, "chant", "1 min", "4 min"),
-    ...partSteps(PAROLE, S.p, "parole", "2 min", "8 min"),
-    tag(BILAN, "bilan", "1 min")
-  ];
-  startSeance("day", steps);
+function seance() { startSeance("day", [...paroleSteps(), tag(BILAN, "bilan", "1 min")]) }
+function chantSeance() {
+  startSeance("chant", [...(S.centre == null ? [tag(CALIB, "chant", "30 s", "réglage")] : []), ...partSteps(CHANT, S.c, "chant", "1 min", "4 min")]);
 }
 
 function finish() {
@@ -642,12 +646,20 @@ function finish() {
     card(body, `<p class="prose">Réécoute tes prises. Avant la vraie présentation : relis ton message clé, trois respirations longues, et « je suis excité ».</p>`);
     body.insertAdjacentHTML("beforeend", `<button class="btn big pri">Retour</button>`); body.lastElementChild.onclick = () => { location.hash = "preparer" }; return;
   }
+  if (R.kind === "chant") {
+    const st = S.c, M = CHANT[st.mod]; st.sess++; let msg;
+    if (st.sess >= M.n && st.mod < CHANT.length - 1) { st.mod++; st.sess = 0; msg = `« ${M.t} » terminé. Prochaine séance : <b>${CHANT[st.mod].t}</b>.` }
+    else msg = `Prochaine séance : encore « ${M.t} »${M.n < 99 ? ` (${st.sess + 1}/${M.n})` : ""}.`;
+    save(); $("#sTitle").textContent = "Séance de chant terminée";
+    card(body, `<p class="prose">${msg}</p>`);
+    body.insertAdjacentHTML("beforeend", `<button class="btn big pri">Retour</button>`); body.lastElementChild.onclick = () => { location.hash = "chant" }; return;
+  }
   markDone(); S.day++;
   if (R.res.conf) S.conf = S.conf.concat({ d: today(), v: R.res.conf }).slice(-120);
   if (R.res.note) S.notes = S.notes.concat({ d: today(), v: R.res.note }).slice(-120);
   $("#sTitle").textContent = "Séance terminée";
   const lines = [];
-  [["c", CHANT, "Chant"], ["p", PAROLE, "Parole"]].forEach(([key, list, label]) => {
+  [["p", PAROLE, "Parole"]].forEach(([key, list, label]) => {
     const st = S[key], M = list[st.mod]; st.sess++;
     if (st.sess >= M.n && st.mod < list.length - 1) { lines.push({ key, label, text: `« ${M.t} » terminé. Prochaine séance : <b>${list[st.mod + 1].t}</b>.`, stay: true, prevMod: st.mod, n: M.n }); st.mod++; st.sess = 0 }
     else lines.push({ key, label, text: `Prochaine séance : encore « ${M.t} »${M.n < 99 ? ` (${st.sess + 1}/${M.n})` : ""}.`, skip: st.mod < list.length - 1, list });
@@ -673,35 +685,50 @@ function stateText(M, st) { return st.sess === 0 ? "Nouveau module" : "Pratique 
 function renderHome() {
   const ds = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }); $("#date").textContent = ds.charAt(0).toUpperCase() + ds.slice(1);
   const done = !!store.get("voix1:log", {})[today()], st = streak();
-  const C = CHANT[S.c.mod], P = PAROLE[S.p.mod];
-  const nextC = S.c.mod < CHANT.length - 1, nextP = S.p.mod < PAROLE.length - 1;
+  const P = PAROLE[S.p.mod], nextP = S.p.mod < PAROLE.length - 1;
   $("#homeBody").innerHTML = `
     <section class="hero-card">
       <div class="row between"><span class="eyebrow">Séance du jour · 15 min</span><span class="xs muted">${st ? "Série : " + st + " j" : ""}</span></div>
       <div class="week">${weekHtml()}</div>
       <div class="group" style="background:var(--fill)">
-        <div class="cell"><div class="ic chant">♪</div><div class="t"><b>${esc(C.t)}</b><span>Chant · ${stateText(C, S.c)}</span></div><span class="val">5 min</span></div>
-        <div class="cell"><div class="ic parole">”</div><div class="t"><b>${esc(P.t)}</b><span>Parole · ${stateText(P, S.p)}</span></div><span class="val">10 min</span></div>
+        <div class="cell"><div class="ic parole">”</div><div class="t"><b>${esc(P.t)}</b><span>Module ${S.p.mod + 1} sur ${PAROLE.length} · ${stateText(P, S.p)}</span></div></div>
       </div>
+      <p class="small muted">${esc(P.why)}</p>
       <button class="btn big pri" id="go">${done ? "Refaire une séance" : "Commencer"}</button>
       ${done ? '<p class="small muted" style="text-align:center">Séance du jour faite. Bravo.</p>' : ""}
     </section>
     ${S.defi < DEFIS.length ? `<div><p class="section-label">Défi réel de la semaine</p><div class="group"><div class="cell"><div class="ic defi">!</div><div class="t"><b style="font-weight:500">${esc(DEFIS[S.defi])}</b></div><button class="btn sm pri" id="defiDone">Fait</button></div></div></div>` : ""}
-    <div><p class="section-label">Avancer plus vite</p><div class="group">
-      ${nextC ? `<button class="cell" id="skipC"><div class="t"><b>Chant : passer au module suivant</b><span>${esc(CHANT[S.c.mod + 1].t)}</span></div><span class="chev">›</span></button>` : ""}
-      ${nextP ? `<button class="cell" id="skipP"><div class="t"><b>Parole : passer au module suivant</b><span>${esc(PAROLE[S.p.mod + 1].t)}</span></div><span class="chev">›</span></button>` : ""}
-    </div></div>`;
+    ${nextP ? `<div class="group"><button class="cell" id="skipP"><div class="t"><b>Passer au module suivant</b><span>${esc(PAROLE[S.p.mod + 1].t)}</span></div><span class="chev">›</span></button></div>` : ""}`;
   $("#go").onclick = seance;
   const dd = $("#defiDone"); if (dd) dd.onclick = () => { S.defisDone = (S.defisDone || []).concat({ d: today(), i: S.defi }); S.defi++; save(); renderHome() };
-  const sc = $("#skipC"); if (sc) sc.onclick = () => { S.c.mod++; S.c.sess = 0; save(); renderHome() };
   const sp = $("#skipP"); if (sp) sp.onclick = () => { S.p.mod++; S.p.sess = 0; save(); renderHome() };
+}
+function renderChant() {
+  const C = CHANT[S.c.mod];
+  $("#chantBody").innerHTML = `<section class="hero-card">
+      <span class="eyebrow">Séance de chant · 5 min</span>
+      <div class="group" style="background:var(--fill)"><div class="cell"><div class="ic chant">♪</div><div class="t"><b>${esc(C.t)}</b><span>Module ${S.c.mod + 1} sur ${CHANT.length} · ${stateText(C, S.c)}</span></div></div></div>
+      <button class="btn big pri" id="goChant">Commencer</button></section>`;
+  $("#goChant").onclick = chantSeance;
+  listModules($("#lChant"), CHANT, S.c, "c");
+  $$("#lChant .cell").forEach(b => b.onclick = () => { S.c.mod = +b.dataset.i; S.c.sess = 0; save(); renderChant() });
+  const r = S.m.range;
+  $("#cStats").innerHTML = [
+    [(S.m.souffle || []).length ? f1(Math.max(...S.m.souffle.map(x => x.v))) + " s" : "–", "record de souffle"],
+    [last("stab") != null ? "±" + last("stab") + " cents" : "–", "stabilité d'une note"],
+    [last("onset") != null ? last("onset") + " ms" : "–", "précision d'attaque"],
+    [last("dyn") != null ? last("dyn") + " dB" : "–", "amplitude des nuances"],
+    [r ? nom(r.lo) + " → " + nom(r.hi) : "–", "tessiture"],
+    [S.m.passage ? nom(S.m.passage) : "–", "passage"]
+  ].map(x => `<div class="stat"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
+  $("#cNote").textContent = S.centre != null ? nom(S.centre) : "–";
 }
 function listModules(el, list, st, key) {
   el.innerHTML = list.map((M, i) => `<button class="cell ${i === st.mod ? "cur" : ""}" data-k="${key}" data-i="${i}"><div class="ic n">${i + 1}</div><div class="t"><b>${esc(M.t)}</b><span>${i === st.mod ? stateText(M, st) : i < st.mod ? "Vu" : ""}</span></div>${i === st.mod ? '<span class="val">En cours</span>' : '<span class="chev">›</span>'}</button>`).join("");
 }
 function renderParcours() {
-  listModules($("#lChant"), CHANT, S.c, "c"); listModules($("#lParole"), PAROLE, S.p, "p");
-  $$("#lChant .cell, #lParole .cell").forEach(b => b.onclick = () => { const st = S[b.dataset.k]; st.mod = +b.dataset.i; st.sess = 0; save(); renderParcours() });
+  listModules($("#lParole"), PAROLE, S.p, "p");
+  $$("#lParole .cell").forEach(b => b.onclick = () => { const st = S[b.dataset.k]; st.mod = +b.dataset.i; st.sess = 0; save(); renderParcours() });
   $("#lDefis").innerHTML = DEFIS.map((d, i) => `<button class="cell ${i === S.defi ? "cur" : ""}" data-d="${i}"><div class="ic ${i < S.defi ? "bilan" : "n"}">${i < S.defi ? "✓" : i + 1}</div><div class="t"><b style="font-weight:${i === S.defi ? 600 : 400}">${esc(d)}</b></div></button>`).join("");
   $$("#lDefis .cell").forEach(b => b.onclick = () => { S.defi = +b.dataset.d; save(); renderParcours() });
   const conf = S.conf.slice(-5), r = S.m.range;
@@ -709,17 +736,13 @@ function renderParcours() {
     [last("euh") != null ? f1(last("euh")) + " /min" : "–", "« euh »"],
     [last("doute") != null ? f1(last("doute")) + " /min" : "–", "mots de doute"],
     [conf.length ? f1(mean(conf.map(x => x.v))) + " / 5" : "–", "confiance (5 dernières)"],
-    [(S.m.souffle || []).length ? f1(Math.max(...S.m.souffle.map(x => x.v))) + " s" : "–", "record de souffle"],
-    [last("stab") != null ? "±" + last("stab") + " cents" : "–", "stabilité d'une note"],
-    [last("onset") != null ? last("onset") + " ms" : "–", "précision d'attaque"],
-    [last("dyn") != null ? last("dyn") + " dB" : "–", "amplitude des nuances"],
-    [r ? nom(r.lo) + " → " + nom(r.hi) : "–", "tessiture" + (S.m.passage ? " · passage " + nom(S.m.passage) : "")]
+    [S.day + "", "séances faites"],
+    [S.defi + " / " + DEFIS.length, "défis réels relevés"]
   ];
   $("#stats").innerHTML = stats.map(s => `<div class="stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join("");
-  $("#cNote").textContent = S.centre != null ? nom(S.centre) : "–";
 }
-$("#cDown").onclick = () => { S.centre = Math.max(43, centre() - 1); save(); renderParcours() };
-$("#cUp").onclick = () => { S.centre = Math.min(69, centre() + 1); save(); renderParcours() };
+$("#cDown").onclick = () => { S.centre = Math.max(43, centre() - 1); save(); renderChant() };
+$("#cUp").onclick = () => { S.centre = Math.min(69, centre() + 1); save(); renderChant() };
 
 /* Préparer */
 const PF = { pSubject: "subject", pKey: "key", pP1: "p1", pP2: "p2", pP3: "p3", pObj: "obj" };
@@ -757,7 +780,7 @@ $("#mtOpen").onclick = async () => {
 };
 
 /* ============ Navigation ============ */
-const SCREENS = ["home", "preparer", "parcours", "libre", "seance"];
+const SCREENS = ["home", "preparer", "chant", "parcours", "libre", "seance"];
 function route() {
   let h = location.hash.slice(1);
   if (h === "seance" && !R.steps.length) h = "";
@@ -768,6 +791,7 @@ function route() {
   $$(".tab").forEach(t => t.setAttribute("aria-current", (t.dataset.go || "home") === sc ? "page" : "false"));
   if (sc === "home") renderHome();
   if (sc === "parcours") renderParcours();
+  if (sc === "chant") renderChant();
   if (sc !== "seance" && wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null }
   window.scrollTo({ top: 0 });
 }
