@@ -427,14 +427,12 @@ const view = $("#view");
 const ICON = { fond: "parole", voix: "voix", corps: "corps", echange: "echange", mots: "mots" };
 const back = (label, hash) => `<button class="back" data-href="${hash}"><span aria-hidden="true">‹</span> ${esc(label)}</button>`;
 const cellLink = (href, title, sub, right = '<span class="chev">›</span>', lead = "") => `<button class="cell" data-href="${href}">${lead}<div class="t"><b>${title}</b>${sub ? `<span>${sub}</span>` : ""}</div>${right}</button>`;
-const seenMark = id => S.seen[id] ? '<span class="seen" aria-label="Vue">✓</span>' : '<span class="chev">›</span>';
+const seenMark = () => '<span class="chev">›</span>';
 
 function renderTheme(T) {
-  const n = T.fiches.filter(f => S.seen[f.id]).length;
   view.innerHTML = `
     <header><h1 class="large">${T.t}</h1><p class="sub">${T.sub}</p></header>
-    <div class="group">${T.fiches.map((f, i) => cellLink("f/" + f.id, esc(f.t), esc(f.sub), seenMark(f.id), `<div class="ic ${ICON[T.id]}">${i + 1}</div>`)).join("")}</div>
-    <p class="foot-note">${n} fiche${n > 1 ? "s" : ""} vue${n > 1 ? "s" : ""} sur ${T.fiches.length}.</p>`;
+    <div class="group">${T.fiches.map((f, i) => cellLink("f/" + f.id, esc(f.t), esc(f.sub), seenMark(f.id), `<div class="ic ${ICON[T.id]}">${i + 1}</div>`)).join("")}</div>`;
 }
 
 function findFiche(id) {
@@ -446,7 +444,6 @@ function findFiche(id) {
 function renderFiche(id, tab) {
   const r = findFiche(id); if (!r) { location.hash = ""; return }
   const { T, F, i, list, vocab } = r;
-  S.seen[F.id] = 1; save();
   const trains = F.train ? [].concat(F.train) : [];
   const tabs = [["comprendre", "Comprendre"]];
   if (vocab) tabs.push(["mots", "Les mots"]); else if (trains.length) tabs.push(["entrainer", "S'entraîner"]);
