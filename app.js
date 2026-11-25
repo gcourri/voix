@@ -574,10 +574,9 @@ function renderReview() {
 
 /* ============ Entraînements globaux : 5 cartes, à voix haute ou en silence ============ */
 const DRILLS = {
-  discours: { t: "Structurer à chaud", sub: "Une question, une contrainte, un temps limité, puis ton autocritique." },
+  discours: { t: "Structurer à chaud", sub: "Une question, une contrainte, un temps limité, puis ton autocritique. Une carte à la fois." },
   voix: { t: "Lecture sous contrainte", sub: "Un texte court, une contrainte, puis ton autocritique. À voix haute, le micro mesure ce qu'il peut." }
 };
-const NCARDS = 5;
 const X = { id: null, mode: "oral", rec: false, cards: [], i: 0, phase: "ready", res: [], audio: null, data: null };
 S.x = S.x || {}; S.pref = S.pref || { mode: "oral", rec: false };
 const ficheTitle = id => (findFiche(id) || { F: { t: "" } }).F.t;
@@ -585,11 +584,11 @@ const shuffle = a => [...a].sort(() => Math.random() - .5);
 const wordsOf = h => h.replace(/<[^>]+>/g, "").split(/\s+/).filter(Boolean).length;
 
 function drillHero(id) {
-  const D = DRILLS[id], h = S.x[id] || [], lastS = h[h.length - 1];
+  const D = DRILLS[id], h = S.x[id] || [];
   return `<section class="hero drill">
     <p class="label">S'entraîner sur toute la section</p>
     <p class="drill-t">${D.t}</p>
-    <p class="small muted">${NCARDS} cartes${lastS ? ` · dernière série : <b>${lastS.pct} %</b>` : ""}</p>
+    <p class="small muted">Une carte à la fois${h.length ? ` · tes 10 dernières : <b>${Math.round(mean(h.slice(-10).map(r => r.pct)))} %</b>` : ""}</p>
     <button class="btn big pri" data-href="ex/${id}">Commencer</button>
   </section>`;
 }
@@ -604,8 +603,8 @@ function renderDrillStart(id) {
     <div class="seg" role="tablist" id="xMode"><button role="tab" data-m="oral" aria-selected="${S.pref.mode === "oral"}">À voix haute</button><button role="tab" data-m="silent" aria-selected="${S.pref.mode === "silent"}">En silence</button></div>
     <p class="foot-note" id="xModeNote"></p></div>
     <div class="group" id="xRecG"><label class="cell"><div class="t"><b>M'enregistrer</b><span>Pour réécouter avant l'autocritique</span></div><input type="checkbox" class="switch" id="xRec" ${S.pref.rec ? "checked" : ""}></label></div>
-    <button class="btn big pri" id="xGo">Commencer les ${NCARDS} cartes</button>
-    ${h.length ? `<div><p class="section-label">Tes dernières séries</p><div class="group">${h.slice().reverse().map(r => `<div class="cell"><div class="t"><b>${r.pct} %</b><span>${r.d.split("-").reverse().slice(0, 2).join("/")} · ${r.mode === "oral" ? "à voix haute" : "en silence"}</span></div></div>`).join("")}</div></div>` : ""}`;
+    <button class="btn big pri" id="xGo">Tirer une carte</button>
+    ${h.length ? `<div><p class="section-label">Tes dernières cartes</p><div class="group">${h.slice().reverse().map(r => `<div class="cell"><div class="t"><b>${r.pct} %</b><span>${r.d.split("-").reverse().slice(0, 2).join("/")} · ${r.mode === "oral" ? "à voix haute" : "en silence"}</span></div></div>`).join("")}</div></div>` : ""}`;
   bindLinks();
   const upd = () => {
     $$("#xMode button").forEach(b => b.setAttribute("aria-selected", b.dataset.m === S.pref.mode));
@@ -619,15 +618,14 @@ function renderDrillStart(id) {
 }
 
 function startDrill(id) {
-  X.id = id; X.mode = S.pref.mode; X.rec = X.mode === "oral" && S.pref.rec; X.i = 0; X.res = [];
-  if (id === "discours") {
-    const rules = shuffle(DRILL_DISCOURS).slice(0, NCARDS);
-    X.cards = rules.map(r => ({ r, q: pick(LISTS[r.list]) }));
-  } else {
-    const rules = X.mode === "oral" ? shuffle(DRILL_VOIX).slice(0, NCARDS) : Array(NCARDS).fill(null);
-    const texts = shuffle(DRILL_TEXTS);
-    X.cards = rules.map((r, k) => ({ r, q: texts[k % texts.length] }));
-  }
+  X.id = id; X.mode = S.pref.mode; X.rec = X.mode === "oral" && S.pref.rec; X.i = 0;
+  const prev = X.cards && X.cards[0];
+  let c;
+  do {
+    if (id === "discours") { const r = pick(DRILL_DISCOURS); c = { r, q: pick(LISTS[r.list]) } }
+    else c = { r: X.mode === "oral" ? pick(DRILL_VOIX) : null, q: pick(DRILL_TEXTS) };
+  } while (prev && c.q === prev.q && c.r === prev.r);
+  X.cards = [c];
   document.body.classList.add("focus");
   renderCard("ready");
 }
@@ -647,11 +645,10 @@ function renderCard(phase) {
   else if (oral) { const s = Math.max(15, Math.round(wordsOf(c.q) / 2.4)); rule = c.r.c.replace("{s}", s); c.secMin = s; src = c.r.f }
   else { rule = "Prépare la lecture : touche un mot pour l'appuyer, touche-le encore pour marquer une respiration après lui."; src = "souffle" }
   view.innerHTML = `
-    <div class="rv-top"><button class="close" id="xQuit" aria-label="Arrêter la série">✕</button><span class="small muted">Carte ${X.i + 1} sur ${NCARDS}</span></div>
-    <div class="bar"><i style="width:${X.i / NCARDS * 100}%"></i></div>
+    <div class="rv-top"><button class="close" id="xQuit" aria-label="Arrêter">✕</button><span class="small muted">${X.mode === "oral" ? "À voix haute" : "En silence"}</span></div>
     <div class="keycard"><p class="xs-label">${X.id === "voix" && !oral ? "Annoter le texte" : "Contrainte · " + esc(ficheTitle(src))}</p><p>${rule}</p></div>
     <div class="stack" id="xBody"></div>`;
-  $("#xQuit").onclick = () => { if (confirm("Arrêter la série ?")) { document.body.classList.remove("focus"); location.hash = X.id } };
+  $("#xQuit").onclick = () => { document.body.classList.remove("focus"); location.hash = X.id };
   const body = $("#xBody");
   if (X.id === "discours") drillDiscours(body, api, c, phase, oral, isR);
   else drillVoix(body, api, c, phase, oral);
@@ -763,29 +760,26 @@ function critique(body, c, measured = null) {
   if (X.audio) card(body, `<p class="label">Réécoute avant de répondre</p><audio controls src="${X.audio}"></audio>`);
   const qs = cardChecks(c); const ans = qs.map(() => null);
   const box = card(body, `<p class="label">Autocritique</p>${qs.map((q, k) => `<div class="yn-row" data-k="${k}"><span>${q}</span><div class="yn2"><button data-v="0">Non</button><button data-v="1">Oui</button></div></div>`).join("")}`);
-  const nx = document.createElement("button"); nx.className = "btn big pri"; nx.disabled = true; nx.textContent = X.i < NCARDS - 1 ? "Carte suivante" : "Voir le résultat"; body.appendChild(nx);
+  const nx = document.createElement("button"); nx.className = "btn big pri"; nx.disabled = true; nx.textContent = "Valider"; body.appendChild(nx);
   box.querySelectorAll(".yn-row").forEach(row => row.querySelectorAll("button").forEach(b => b.onclick = () => {
     ans[+row.dataset.k] = b.dataset.v === "1"; row.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
     nx.disabled = ans.some(a => a === null);
   }));
   nx.onclick = () => {
     const pts = ans.filter(Boolean).length + (measured === true ? 1 : 0), tot = ans.length + (measured == null ? 0 : 1);
-    X.res.push({ f: c.r ? c.r.f : "souffle", pts, tot });
-    X.i++; if (X.i < NCARDS) renderCard("ready"); else drillEnd();
+    drillEnd({ f: c.r ? c.r.f : "souffle", pts, tot });
   };
 }
 
-function drillEnd() {
+function drillEnd(r) {
   cleanup(); document.body.classList.remove("focus");
-  const pts = X.res.reduce((a, r) => a + r.pts, 0), tot = X.res.reduce((a, r) => a + r.tot, 0), pct = tot ? Math.round(pts / tot * 100) : 0;
-  const prev = (S.x[X.id] || []).slice(-5);
-  S.x[X.id] = (S.x[X.id] || []).concat({ d: today(), pct, mode: X.mode }).slice(-60); save();
-  const avg = prev.length ? Math.round(mean(prev.map(r => r.pct))) : null;
-  const weak = X.res.filter(r => r.pts < r.tot).map(r => r.f).filter((v, k, a) => a.indexOf(v) === k);
+  const pct = r.tot ? Math.round(r.pts / r.tot * 100) : 0;
+  S.x[X.id] = (S.x[X.id] || []).concat({ d: today(), pct, mode: X.mode, f: r.f }).slice(-100); save();
+  const h = S.x[X.id].slice(-10), avg = Math.round(mean(h.map(x => x.pct)));
   view.innerHTML = `
-    <section class="hero"><p class="label">Série terminée</p><p class="big-num">${pct} %</p><p class="muted">critères réussis${avg != null ? ` · moyenne précédente ${avg} %` : ""}</p></section>
-    ${weak.length ? `<div><p class="section-label">À revoir</p><div class="group">${weak.map(f => cellLink("f/" + f, esc(ficheTitle(f)), "Relire la fiche")).join("")}</div></div>` : `<div class="card"><p class="prose">Tous les critères sont réussis. La prochaine fois, essaie sans préparation.</p></div>`}
-    <div class="pair"><button class="btn big" data-href="${X.id}">Terminer</button><button class="btn big pri" id="xAgain">Une autre série</button></div>`;
+    <section class="hero"><p class="big-num">${r.pts}/${r.tot}</p><p class="muted">critères réussis${h.length > 1 ? ` · moyenne de tes ${h.length} dernières cartes : ${avg} %` : ""}</p></section>
+    ${r.pts < r.tot ? `<div class="group">${cellLink("f/" + r.f, "Relire la fiche", esc(ficheTitle(r.f)))}</div>` : ""}
+    <div class="pair"><button class="btn big" data-href="${X.id}">Terminer</button><button class="btn big pri" id="xAgain">Une autre carte</button></div>`;
   bindLinks(); $("#xAgain").onclick = () => startDrill(X.id);
 }
 
