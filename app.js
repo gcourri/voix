@@ -17,7 +17,7 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 const nowS = () => performance.now() / 1000;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const f1 = v => (Math.round(v * 10) / 10).toString().replace(".", ",");
-const { LISTS, THEMES, VOCAB, PARLER_TEXTS, DRILL_DISCOURS, DRILL_DISCOURS_ALL, DRILL_VOIX, DRILL_VOIX_SILENT, DRILL_TEXTS } = window;
+const { LISTS, THEMES, VOCAB, PARLER_TEXTS, CARDS, REPERE, ESSAIS } = window;
 THEMES.forEach(T => { if (!T.groups) T.groups = [{ t: null, fiches: T.fiches }]; T.fiches = T.groups.flatMap(g => g.fiches.map(f => Object.assign(f, { g: g.t }))) });
 
 /* ============ Notes ============ */
@@ -434,8 +434,8 @@ function renderTheme(T) {
   let n = 0;
   view.innerHTML = `
     <header><h1 class="large">${T.t}</h1><p class="sub">${T.sub}</p></header>
-    ${DRILLS[T.id] ? drillHero(T.id) : ""}
-    ${T.groups.map(g => `<div>${g.t || DRILLS[T.id] ? `<p class="section-label">${g.t || "Les fiches"}</p>` : ""}<div class="group">${g.fiches.map(f => cellLink("f/" + f.id, esc(f.t), esc(f.sub), '<span class="chev">›</span>', `<div class="ic ${ICON[T.id]}">${++n}</div>`)).join("")}</div></div>`).join("")}`;
+    ${sectionHub(T.id)}
+    ${T.groups.map(g => `<div>${g.t || sectionHub(T.id) ? `<p class="section-label">${g.t || "Les fiches"}</p>` : ""}<div class="group">${g.fiches.map(f => cellLink("f/" + f.id, esc(f.t), esc(f.sub), '<span class="chev">›</span>', `<div class="ic ${ICON[T.id]}">${++n}</div>`)).join("")}</div></div>`).join("")}`;
 }
 const ALL = () => [...THEMES.flatMap(T => T.fiches.map(f => f.id)), ...VOCAB.map(f => f.id)];
 function randomFiche(not) { return pick(ALL().filter(x => x !== not)) }
@@ -572,215 +572,235 @@ function renderReview() {
   }
 }
 
-/* ============ Entraînements globaux : 5 cartes, à voix haute ou en silence ============ */
-const DRILLS = {
-  discours: { t: "Structurer à chaud", sub: "Une question, une contrainte, un temps limité, puis ton autocritique. Une carte à la fois." },
-  voix: { t: "Lecture sous contrainte", sub: "Un texte court, une contrainte, puis ton autocritique. À voix haute, le micro mesure ce qu'il peut." }
-};
-const X = { id: null, mode: "oral", rec: false, cards: [], i: 0, phase: "ready", res: [], audio: null, data: null };
-S.x = S.x || {}; S.pref = S.pref || { mode: "oral", rec: false };
-const ficheTitle = id => (findFiche(id) || { F: { t: "" } }).F.t;
 const shuffle = a => [...a].sort(() => Math.random() - .5);
-const wordsOf = h => h.replace(/<[^>]+>/g, "").split(/\s+/).filter(Boolean).length;
+/* ============ Exercices de section ============ */
+const ftitle = id => { const r = findFiche(id); return r ? r.F.t : "" };
+const daysSince = d => d ? Math.round((new Date(today()) - new Date(d)) / 864e5) : null;
+S.dc = S.dc || {}; S.dcNew = S.dcNew || { d: "", n: 0 }; S.rp = S.rp || []; S.eu = S.eu || []; S.es = S.es || [];
 
-function drillHero(id) {
-  const D = DRILLS[id], h = S.x[id] || [];
-  return `<section class="hero drill">
-    <p class="label">S'entraîner sur toute la section</p>
-    <p class="drill-t">${D.t}</p>
-    <p class="small muted">Une carte à la fois${h.length ? ` · tes 10 dernières : <b>${Math.round(mean(h.slice(-10).map(r => r.pct)))} %</b>` : ""}</p>
-    <button class="btn big pri" data-href="ex/${id}">Commencer</button>
-  </section>`;
+/* ---- Cartes réflexes : répétition espacée, comme les mots ---- */
+const NEW_PER_DAY = 6;
+function newLeft() { return S.dcNew.d === today() ? Math.max(0, NEW_PER_DAY - S.dcNew.n) : NEW_PER_DAY }
+function cardsDue() {
+  const seen = CARDS.filter(c => S.dc[c.id] && S.dc[c.id].due <= today());
+  const fresh = CARDS.filter(c => !S.dc[c.id]).slice(0, newLeft());
+  return { seen, fresh, n: seen.length + fresh.length };
+}
+function sectionHub(id) {
+  if (id === "discours") {
+    const d = cardsDue().n, known = CARDS.filter(c => S.dc[c.id] && S.dc[c.id].box >= 3).length;
+    return `<section class="hero drill">
+      <p class="label">S'entraîner</p><p class="drill-t">Cartes réflexes</p>
+      <p class="small muted">${d ? `<b>${d}</b> carte${d > 1 ? "s" : ""} à faire aujourd'hui` : "Rien à revoir aujourd'hui"} · ${known} sur ${CARDS.length} acquises</p>
+      <button class="btn big ${d ? "pri" : ""}" data-href="cartes">${d ? "Commencer" : "Réviser quand même"}</button></section>`;
+  }
+  if (id === "voix") {
+    const lastEu = S.eu[S.eu.length - 1], ds = lastEu ? daysSince(lastEu.d) : null;
+    const rpAvg = S.rp.length ? Math.round(mean(S.rp.slice(-10))) : null;
+    return `<div><p class="section-label">S'entraîner</p><div class="group">
+      ${cellLink("repere", "Repère", "En silence · trouve ce qui affaiblit une phrase" + (rpAvg != null ? ` · ${rpAvg} %` : ""), '<span class="chev">›</span>', '<div class="ic voix">◎</div>')}
+      ${cellLink("euh", "Tes « euh »", "À voix haute · compte, puis refais" + (ds != null ? ` · ${ds === 0 ? "aujourd'hui" : ds === 1 ? "hier" : "il y a " + ds + " jours"}` : ""), '<span class="chev">›</span>', '<div class="ic voix">#</div>')}
+      ${cellLink("essais", "Une phrase, trois essais", "À voix haute · le micro mesure, tu refais", '<span class="chev">›</span>', '<div class="ic voix">↻</div>')}
+    </div>${ds != null && ds >= 7 ? `<p class="foot-note">Une séance « Tes euh » de rappel ancre l'habitude : la dernière date de ${ds} jours.</p>` : ""}</div>`;
+  }
+  return "";
 }
 
-function renderDrillStart(id) {
-  const D = DRILLS[id]; X.id = id;
-  const h = (S.x[id] || []).slice(-5);
-  view.innerHTML = `
-    ${back(THEMES.find(T => T.id === id).t, id)}
-    <header><h1 class="title">${D.t}</h1><p class="sub">${D.sub}</p></header>
-    <div><p class="section-label">Où es-tu ?</p>
-    <div class="seg" role="tablist" id="xMode"><button role="tab" data-m="oral" aria-selected="${S.pref.mode === "oral"}">À voix haute</button><button role="tab" data-m="silent" aria-selected="${S.pref.mode === "silent"}">En silence</button></div>
-    <p class="foot-note" id="xModeNote"></p></div>
-    <div class="group" id="xRecG"><label class="cell"><div class="t"><b>M'enregistrer</b><span>Pour réécouter avant l'autocritique</span></div><input type="checkbox" class="switch" id="xRec" ${S.pref.rec ? "checked" : ""}></label></div>
-    <button class="btn big pri" id="xGo">Tirer une carte</button>
-    ${h.length ? `<div><p class="section-label">Tes dernières cartes</p><div class="group">${h.slice().reverse().map(r => `<div class="cell"><div class="t"><b>${r.pct} %</b><span>${r.d.split("-").reverse().slice(0, 2).join("/")} · ${r.mode === "oral" ? "à voix haute" : "en silence"}</span></div></div>`).join("")}</div></div>` : ""}`;
-  bindLinks();
-  const upd = () => {
-    $$("#xMode button").forEach(b => b.setAttribute("aria-selected", b.dataset.m === S.pref.mode));
-    $("#xRecG").hidden = S.pref.mode !== "oral";
-    $("#xModeNote").textContent = S.pref.mode === "oral" ? (id === "voix" ? "Tu lis le texte à voix haute." : "Tu réponds à voix haute, dans le temps imparti.") : (id === "voix" ? "Tu annotes le texte : où respirer, quels mots appuyer." : "Tu écris ta structure en mots-clés, dans le temps imparti.");
-  };
-  $$("#xMode button").forEach(b => b.onclick = () => { S.pref.mode = b.dataset.m; save(); upd() });
-  $("#xRec").onchange = e => { S.pref.rec = e.target.checked; save() };
-  $("#xGo").onclick = () => startDrill(id);
-  upd();
+const CK = { q: [], i: 0, ok: 0, flip: false, rec: null, audio: null, retry: false };
+const KLABEL = { r: "Réécris", a: "Que réponds-tu ?", s: "Quelle structure ?" };
+const KHOW = { r: "Reformule cette phrase, de tête ou à voix haute.", a: "Réponds, de tête ou à voix haute.", s: "Quelle structure utiliserais-tu ?" };
+function startCards() {
+  const { seen, fresh } = cardsDue();
+  let q = shuffle(seen).concat(fresh);
+  CK.extra = !q.length; if (!q.length) q = shuffle(CARDS).slice(0, 8);
+  CK.q = q.slice(0, 15); CK.i = 0; CK.ok = 0; CK.flip = false; CK.audio = null; renderCardRV();
 }
-
-function startDrill(id) {
-  X.id = id; X.mode = S.pref.mode; X.rec = X.mode === "oral" && S.pref.rec; X.i = 0;
-  const prev = X.cards && X.cards[0];
-  let c;
-  do {
-    if (id === "discours") { const r = pick(DRILL_DISCOURS); c = { r, q: pick(LISTS[r.list]) } }
-    else c = { r: X.mode === "oral" ? pick(DRILL_VOIX) : null, q: pick(DRILL_TEXTS) };
-  } while (prev && c.q === prev.q && c.r === prev.r);
-  X.cards = [c];
-  document.body.classList.add("focus");
-  renderCard("ready");
-}
-
-function cardChecks(c) {
-  if (X.id === "discours") return [...(X.mode === "oral" ? c.r.oral : c.r.silent), X.mode === "oral" ? DRILL_DISCOURS_ALL.oral : DRILL_DISCOURS_ALL.silent];
-  return X.mode === "oral" ? c.r.oral : DRILL_VOIX_SILENT;
-}
-
-function renderCard(phase) {
+function renderCardRV() {
   cleanup(); const api = mkApi();
-  X.phase = phase; const c = X.cards[X.i];
-  if (phase === "ready") { X.audio = null; X.data = null }
-  const oral = X.mode === "oral", isR = c.r && c.r.g === "r";
-  let rule, src;
-  if (X.id === "discours") { rule = c.r.c; src = c.r.f }
-  else if (oral) { const s = Math.max(15, Math.round(wordsOf(c.q) / 2.4)); rule = c.r.c.replace("{s}", s); c.secMin = s; src = c.r.f }
-  else { rule = "Prépare la lecture : touche un mot pour l'appuyer, touche-le encore pour marquer une respiration après lui."; src = "souffle" }
+  if (CK.i >= CK.q.length) {
+    view.innerHTML = `${back("Discours", "discours")}<section class="hero"><p class="big-num">${CK.ok}/${CK.q.length}</p><p class="muted">cartes réussies</p><button class="btn big pri" data-href="discours">Terminer</button></section>`;
+    bindLinks(); return;
+  }
+  const c = CK.q[CK.i]; CK.stopRec = null;
+  const recto = `${c.c ? `<p class="small muted">${esc(c.c)}</p>` : ""}<p class="${c.k === "r" ? "flash-d" : "flash-q"}">${c.k === "r" ? "« " + esc(c.q) + " »" : esc(c.q)}</p>`;
+  const verso = c.k === "s"
+    ? `<p class="flash-a">${esc(c.a)}</p><p class="small muted">${esc(c.x)}</p>`
+    : `<p class="flash-model">${c.k === "r" ? "« " + esc(c.a) + " »" : esc(c.a)}</p><p class="small"><b>${c.k === "r" ? "Ce qui n'allait pas" : "Structure"} :</b> ${esc(c.k === "r" ? c.e : c.s)}</p>`;
   view.innerHTML = `
-    <div class="rv-top"><button class="close" id="xQuit" aria-label="Arrêter">✕</button><span class="small muted">${X.mode === "oral" ? "À voix haute" : "En silence"}</span></div>
-    <div class="keycard"><p class="xs-label">${X.id === "voix" && !oral ? "Annoter le texte" : "Contrainte · " + esc(ficheTitle(src))}</p><p>${rule}</p></div>
-    <div class="stack" id="xBody"></div>`;
-  $("#xQuit").onclick = () => { document.body.classList.remove("focus"); location.hash = X.id };
-  const body = $("#xBody");
-  if (X.id === "discours") drillDiscours(body, api, c, phase, oral, isR);
-  else drillVoix(body, api, c, phase, oral);
-}
-
-/* Lance un enregistrement si demandé ; renvoie une fonction d'arrêt */
-async function maybeRecord(api) {
-  if (!X.rec) return () => {};
-  const r = await recordInto(url => { X.audio = url });
-  if (!r) return () => {};
-  api.onClean(() => r.stop());
-  return () => r.stop();
-}
-
-function drillDiscours(body, api, c, phase, oral, isR) {
-  const qLabel = isR ? (c.r.list === "BRIEFS" ? "Le client te dit" : c.r.list === "DOUTES" ? "La situation" : "On te dit") : "Sujet";
-  const qCard = card(body, `<p class="label">${qLabel}</p><p class="topic">${esc(c.q)}</p>`);
-  if (phase === "ready") {
-    if (!oral) { body.insertAdjacentHTML("beforeend", `<p class="prose">Tu auras <b>60 secondes</b> pour écrire ta structure en mots-clés.</p>`) }
-    else body.insertAdjacentHTML("beforeend", `<p class="prose"><b>10 secondes</b> pour réfléchir, puis <b>45 secondes</b> pour répondre${X.rec ? ", enregistré" : ""}.</p>`);
-    const b = document.createElement("button"); b.className = "btn big pri"; b.textContent = "C'est parti"; body.appendChild(b);
-    b.onclick = () => renderCard("go");
-    if (isR && oral) setTimeout(() => api.alive() && say(c.q), 300);
+    <div class="rv-top">${back("Discours", "discours")}<span class="small muted">${CK.i + 1} / ${CK.q.length}</span></div>
+    <div class="bar"><i style="width:${CK.i / CK.q.length * 100}%"></i></div>
+    <section class="flash left">
+      <p class="label">${KLABEL[c.k]}${CK.retry ? " · nouvel essai" : ""}</p>
+      ${recto}
+      ${CK.flip ? `<div class="flash-back">${verso}</div>` : ""}
+    </section>
+    <div id="ckRec"></div>
+    <div id="ckAct" class="stack"></div>
+    <p class="foot-note" style="text-align:center">${CK.flip ? (c.k === "s" ? "Sois honnête : c'est ce qui fait revenir les bonnes cartes." : "Compare l'essentiel, pas les mots exacts.") : KHOW[c.k]}</p>`;
+  bindLinks();
+  const act = $("#ckAct");
+  if (c.k !== "s") {
+    const rb = $("#ckRec");
+    if (!CK.flip) {
+      rb.innerHTML = `<button class="btn ghost sm" id="ckR">● M'enregistrer</button>`;
+      let r = null;
+      $("#ckR").onclick = async () => {
+        if (r) { r.stop(); r = null; CK.recOn = false; $("#ckR").textContent = "● Enregistré"; return }
+        r = await recordInto(url => { CK.audio = url });
+        if (!r) { micHelp(rb, () => $("#ckR").click()); return }
+        $("#ckR").textContent = "■ Arrêter l'enregistrement"; CK.recOn = true;
+        api.onClean(() => { if (r) r.stop() });
+      };
+      CK.stopRec = () => { if (r) { r.stop(); r = null } };
+    } else if (CK.audio) rb.innerHTML = `<audio controls src="${CK.audio}"></audio>`;
+  }
+  if (!CK.flip) {
+    act.innerHTML = `<button class="btn big pri" id="ckFlip">Voir le modèle</button>`;
+    $("#ckFlip").onclick = () => { const w = CK.recOn; CK.recOn = false; if (CK.stopRec) CK.stopRec(); setTimeout(() => { CK.flip = true; renderCardRV() }, w ? 300 : 0) };
     return;
   }
-  if (phase === "go") {
-    if (!oral) {
-      const f = card(body, `<div class="timer"><span class="clock">1:00</span><span class="small muted">Mots-clés seulement</span></div><div class="fields">${c.r.w.map((w, k) => `<label>${w}<input data-k="${k}" autocomplete="off"></label>`).join("")}</div>`);
-      const clk = f.querySelector(".clock"), ins = [...f.querySelectorAll("input")]; ins[0].focus();
-      const t0 = nowS(); let done = false;
-      const end = () => { if (done) return; done = true; clearInterval(iv); X.data = ins.map(i => i.value.trim()); renderCard("critique") };
-      const iv = setInterval(() => { const s = 60 - (nowS() - t0); clk.textContent = fmt(s); if (s <= 10) clk.style.color = "var(--off)"; if (s <= 0) { beep(); end() } }, 250);
-      api.onClean(() => clearInterval(iv));
-      const b = document.createElement("button"); b.className = "btn big"; b.textContent = "J'ai fini"; body.appendChild(b); b.onclick = end;
-      return;
-    }
-    const tm = card(body, `<p class="label ph">Réfléchis</p><div class="timer"><span class="clock">0:10</span></div><p class="small muted hint"></p>`);
-    const clk = tm.querySelector(".clock"), ph = tm.querySelector(".ph"), hint = tm.querySelector(".hint");
-    let t0 = nowS(), stage = "prep", stopRec = () => {}, cuts = [], done = false;
-    const pool = c.r.cut ? shuffle(LISTS[c.r.cut]) : [];
-    const end = () => { if (done) return; done = true; clearInterval(iv); stopRec(); try { speechSynthesis.cancel() } catch (e) {} setTimeout(() => api.alive() && renderCard("critique"), X.rec ? 350 : 0) };
-    const iv = setInterval(async () => {
-      const s = nowS() - t0;
-      if (stage === "prep") {
-        clk.textContent = fmt(10 - s);
-        if (s >= 10) { stage = "talk"; t0 = nowS(); beep(); ph.textContent = "Parle"; ph.style.color = "var(--accent)"; btn.textContent = "J'ai fini"; cuts = c.r.cut ? [12 + Math.random() * 6, 28 + Math.random() * 6] : []; stopRec = await maybeRecord(api) }
-      } else {
-        clk.textContent = fmt(45 - s); if (45 - s <= 10) clk.style.color = "var(--off)";
-        if (cuts.length && s >= cuts[0]) { cuts.shift(); const o = pool.pop(); say(o); hint.innerHTML = `<b>« ${esc(o)} »</b>` }
-        if (s >= 45) { beep(); end() }
-      }
-    }, 200);
-    api.onClean(() => { clearInterval(iv); stopRec() });
-    const btn = document.createElement("button"); btn.className = "btn big"; btn.textContent = "Je suis prêt"; body.appendChild(btn);
-    btn.onclick = async () => { if (stage === "prep") { t0 = nowS() - 10 } else end() };
-    return;
-  }
-  // critique
-  if (!oral && X.data) card(body, `<p class="label">Ce que tu as écrit</p><dl class="wrote">${c.r.w.map((w, k) => `<dt>${w}</dt><dd>${X.data[k] ? esc(X.data[k]) : '<span class="muted">vide</span>'}</dd>`).join("")}</dl>`);
-  critique(body, c);
+  act.innerHTML = `${c.k !== "s" && !CK.retry ? `<button class="btn big" id="ckRetry">Réessayer avec le modèle en tête</button>` : ""}<div class="pair"><button class="btn big" id="ckNo">À revoir</button><button class="btn big pri" id="ckYes">Je l'avais</button></div>`;
+  const rt = $("#ckRetry"); if (rt) rt.onclick = () => { CK.retry = true; CK.flip = false; CK.audio = null; renderCardRV() };
+  const rate = ok => {
+    const st = S.dc[c.id];
+    if (!st) { if (S.dcNew.d !== today()) S.dcNew = { d: today(), n: 0 }; S.dcNew.n++ }
+    const box = ok ? Math.min(DAYS.length - 1, (st ? st.box : 0) + 1) : 0;
+    S.dc[c.id] = { box, due: ok ? addDays(DAYS[box]) : today() }; save();
+    if (ok) CK.ok++; else if (!CK.extra) CK.q.push(c);
+    CK.i++; CK.flip = false; CK.retry = false; CK.audio = null; renderCardRV();
+  };
+  $("#ckYes").onclick = () => rate(true); $("#ckNo").onclick = () => rate(false);
 }
 
-function drillVoix(body, api, c, phase, oral) {
-  if (!oral) {
-    if (phase === "ready" || phase === "go") {
-      const words = c.q.replace(/<b>(.*?)<\/b>/g, (m, x) => x.split(" ").map(w => "\u0001" + w).join(" ")).split(" ");
-      const tx = card(body, `<p class="annot">${words.map((w, k) => `<button class="w" data-k="${k}" data-s="0">${esc(w.replace("\u0001", ""))}</button>`).join(" ")}</p><p class="xs muted legend"><span class="w s1">appuyé</span> <span class="w s2">respiration après</span></p>`);
-      tx.querySelectorAll(".w[data-k]").forEach(b => b.onclick = () => { const s = (+b.dataset.s + 1) % 3; b.dataset.s = s; b.className = "w" + (s ? " s" + s : "") });
-      const b = document.createElement("button"); b.className = "btn big pri"; b.textContent = "J'ai fini"; body.appendChild(b);
-      b.onclick = () => { X.data = { html: tx.querySelector(".annot").innerHTML, bold: words.map(w => w.startsWith("\u0001")) }; renderCard("critique") };
-      return;
-    }
-    card(body, `<p class="label">Ton annotation</p><p class="annot ro">${X.data.html}</p><p class="small muted">Dans le texte d'origine, les mots en gras étaient : ${(c.q.match(/<b>(.*?)<\/b>/g) || []).map(m => "« " + m.replace(/<\/?b>/g, "") + " »").join(", ")}.</p>`);
-    critique(body, c); return;
-  }
-  const m = c.r.m;
-  if (phase === "ready" || phase === "go") {
-    card(body, `<p class="prose read">${c.q}</p>`);
-    const ctl = card(body, `<div class="timer"><span class="clock">0:00</span><button class="btn pri go">Je commence</button></div>${m ? `<p class="small muted">${m === "dur" ? "L'appli chronomètre." : "Le micro mesure pendant que tu lis."}</p>` : ""}`);
-    const go = ctl.querySelector(".go"), clk = ctl.querySelector(".clock");
-    let on = false, t0 = 0, iv = null, fr = [], f = null, stopRec = () => {}, w = null;
-    go.onclick = async () => {
-      if (!on) {
-        if ((m === "zone" || m === "fins") && !(await startMic())) { micHelp(body, () => go.click()); return }
-        on = true; t0 = nowS(); go.textContent = "J'ai fini"; stopRec = await maybeRecord(api);
-        if (m === "zone" && !w) { w = zoneWidget(body); api.onClean(() => w.destroy()) }
-        if (m === "zone" || m === "fins") { f = s => fr.push(s); api.on(f) }
-        iv = setInterval(() => { clk.textContent = fmt(nowS() - t0) }, 250); api.onClean(() => clearInterval(iv));
-        return;
-      }
-      clearInterval(iv); stopRec(); if (f) api.off(f);
-      const dur = nowS() - t0, an = (m === "zone" || m === "fins") ? analyseVoice(fr, timbre(), []) : null;
-      X.data = { dur, an };
-      setTimeout(() => api.alive() && renderCard("critique"), X.rec ? 350 : 0);
+/* ---- Repère : toucher ce qui affaiblit la phrase ---- */
+const RP = { last: -1 };
+function renderRepere() {
+  cleanup();
+  let k; do { k = Math.floor(Math.random() * REPERE.length) } while (k === RP.last && REPERE.length > 1); RP.last = k;
+  const it = REPERE[k];
+  const toks = [];
+  it.q.replace(/\[([^\]]+)\]|([^\s\[\]]+)/g, (m, t, w) => {
+    if (!t && /^[,.;:!?»]+$/.test(w) && toks.length) { toks[toks.length - 1].p += (/^[,.]/.test(w) ? "" : "\u00a0") + w; return }
+    toks.push(t ? { t, hit: true, p: "" } : { t: w, hit: false, p: "" });
+  });
+  view.innerHTML = `
+    ${back("Voix", "voix")}
+    <header><h1 class="title">Repère</h1><p class="sub">Touche tout ce qui affaiblit la phrase : hésitations, atténuations, questions de fin, tics.</p></header>
+    <section class="flash left"><p class="annot">${toks.map((x, i) => `<button class="w" data-i="${i}">${esc(x.t)}</button>${esc(x.p)}`).join(" ")}</p></section>
+    <div id="rpAct" class="stack"><button class="btn big pri" id="rpOk">Vérifier</button></div>`;
+  bindLinks();
+  const sel = new Set();
+  $$(".annot .w").forEach(b => b.onclick = () => { const i = +b.dataset.i; sel.has(i) ? sel.delete(i) : sel.add(i); b.classList.toggle("s1", sel.has(i)) });
+  $("#rpOk").onclick = () => {
+    const targets = toks.map((x, i) => x.hit ? i : -1).filter(i => i >= 0);
+    const found = targets.filter(i => sel.has(i)).length, wrong = [...sel].filter(i => !toks[i].hit).length;
+    const pct = Math.round(Math.max(0, found - wrong) / targets.length * 100);
+    S.rp = S.rp.concat(pct).slice(-100); save();
+    $$(".annot .w").forEach(b => {
+      const i = +b.dataset.i, x = toks[i]; b.disabled = true; b.className = "w";
+      if (x.hit && sel.has(i)) b.classList.add("hit"); else if (x.hit) b.classList.add("miss"); else if (sel.has(i)) b.classList.add("wrong");
+    });
+    $("#rpAct").innerHTML = `
+      <div class="card"><p class="result"><b>${found}/${targets.length}</b> trouvé${found > 1 ? "s" : ""}${wrong ? ` · ${wrong} en trop` : ""}</p>
+      <p class="xs muted legend"><span class="w hit">trouvé</span> <span class="w miss">oublié</span> <span class="w wrong">en trop</span></p>
+      <p class="label" style="margin-top:6px">Version affirmée</p><p class="flash-model">« ${esc(it.a)} »</p></div>
+      <div class="pair"><button class="btn big" data-href="voix">Terminer</button><button class="btn big pri" id="rpNext">Une autre phrase</button></div>`;
+    bindLinks(); $("#rpNext").onclick = renderRepere;
+  };
+}
+
+/* ---- Tes « euh » : enregistrer, compter, refaire (inversion d'habitude) ---- */
+const EU = { step: 0, q: "", takes: [] };
+function renderEuh(step) {
+  cleanup(); const api = mkApi();
+  if (step == null) { EU.step = 0; EU.q = pick(LISTS.QUICK); EU.takes = [] } else EU.step = step;
+  const n = EU.takes.length, s = EU.step;
+  const head = `${back("Voix", "voix")}<header><h1 class="title">Tes « euh »</h1><p class="sub">${s < 2 ? "Prise 1 : parle naturellement." : s < 4 ? "Prise 2 : même question. À chaque « euh » qui arrive, ferme la bouche et fais une pause." : "Résultat"}</p></header>`;
+  if (s === 0 || s === 2) {
+    view.innerHTML = `${head}
+      <div class="card"><p class="label">Question</p><p class="topic" id="euQ">${esc(EU.q)}</p>${s === 0 ? '<button class="btn ghost sm" id="euOther">Une autre question</button>' : ""}</div>
+      <div class="card"><div class="timer"><span class="clock" id="euClk">0:30</span><button class="btn pri" id="euGo">M'enregistrer</button></div><p class="small muted">30 secondes au plus.</p></div>`;
+    bindLinks();
+    const o = $("#euOther"); if (o) o.onclick = () => { EU.q = pick(LISTS.QUICK); $("#euQ").textContent = EU.q };
+    let r = null, t0 = 0, iv = null;
+    const stop = () => { if (!r) return; r.stop(); r = null; clearInterval(iv); EU.cur.dur = Math.max(3, nowS() - t0) };
+    $("#euGo").onclick = async () => {
+      if (r) { stop(); return }
+      EU.cur = { url: null, dur: 0 };
+      r = await recordInto(url => { if (!api.alive()) return; EU.cur.url = url; EU.takes.push(EU.cur); renderEuh(s + 1) });
+      if (!r) { micHelp(view, () => $("#euGo").click()); return }
+      t0 = nowS(); $("#euGo").textContent = "Arrêter";
+      iv = setInterval(() => { const e = nowS() - t0; $("#euClk").textContent = fmt(30 - e); if (e >= 30) stop() }, 200);
+      api.onClean(() => { clearInterval(iv); if (r) r.stop() });
     };
     return;
   }
-  // critique avec mesure
-  const d = X.data || {}; let pass = null, txt = "";
-  if (m === "dur") { pass = d.dur >= c.secMin; txt = `Durée : <b>${Math.round(d.dur)} s</b> (objectif : au moins ${c.secMin} s).` }
-  if (m === "zone") { if (d.an) { pass = d.an.zone >= 80; txt = `Dans ta zone : <b>${d.an.zone} %</b> (objectif : 80 %).` } else txt = "Pas assez de voix captée pour mesurer." }
-  if (m === "fins") { if (d.an && d.an.fins != null) { pass = d.an.fins >= 80; txt = `Fins de phrase pleines : <b>${d.an.fins} %</b> (objectif : 80 %).` } else txt = "Pas assez de voix captée pour mesurer." }
-  if (m) card(body, `<p class="label">Mesure</p><p class="result">${txt} ${pass == null ? "" : pass ? '<span class="pass">Réussi</span>' : '<span class="fail">Pas encore</span>'}</p>`, pass ? "ok-tint" : "");
-  critique(body, c, pass);
+  if (s === 1 || s === 3) {
+    const t = EU.takes[n - 1]; t.euh = t.euh || 0; t.att = t.att || 0;
+    view.innerHTML = `${head}
+      <div class="card"><p class="label">Réécoute ta prise ${n}, et touche à chaque fois que tu entends…</p><audio controls src="${t.url}"></audio></div>
+      <div class="counters"><button class="counter" id="cE"><b>${t.euh}</b><span>« euh », reprise</span></button><button class="counter" id="cA"><b>${t.att}</b><span>atténuation, tic</span></button></div>
+      <button class="btn ghost sm" id="cUndo">Annuler la dernière touche</button>
+      <button class="btn big pri" id="euNext">${s === 1 ? "Refaire la même question" : "Voir le résultat"}</button>`;
+    bindLinks();
+    const hist = [];
+    const upd = () => { $("#cE b").textContent = t.euh; $("#cA b").textContent = t.att };
+    $("#cE").onclick = () => { t.euh++; hist.push("euh"); upd() };
+    $("#cA").onclick = () => { t.att++; hist.push("att"); upd() };
+    $("#cUndo").onclick = () => { const h = hist.pop(); if (h) { t[h] = Math.max(0, t[h] - 1); upd() } };
+    $("#euNext").onclick = () => renderEuh(s + 1);
+    return;
+  }
+  const pm = t => Math.round((t.euh + t.att) / (t.dur / 60) * 10) / 10;
+  const a = EU.takes[0], b = EU.takes[1], ra = pm(a), rb = pm(b);
+  S.eu = S.eu.concat({ d: today(), a: ra, b: rb }).slice(-100); save();
+  const h = S.eu.slice(-8);
+  view.innerHTML = `${head}
+    <div class="stats"><div class="stat"><b>${f1(ra)}</b><span>par minute · prise 1</span></div><div class="stat"><b>${f1(rb)}</b><span>par minute · prise 2</span></div></div>
+    <div class="card"><p class="prose">${rb < ra ? "Moins d'hésitations dès le deuxième essai : c'est le geste de remplacement qui s'installe." : rb === ra ? "Même niveau : la prochaine fois, ralentis juste avant chaque nouvelle idée, c'est là que le « euh » arrive." : "Plus d'hésitations en prise 2 : c'est normal au début, l'attention perturbe. Continue, l'habitude se met en place en quelques séances."}</p></div>
+    ${h.length > 1 ? `<div><p class="section-label">Tes dernières séances · prise 1</p><div class="spark">${h.map(x => { const mx = Math.max(...h.map(y => y.a), 1); return `<i style="height:${Math.max(6, x.a / mx * 100)}%" title="${f1(x.a)}"></i>` }).join("")}</div><p class="foot-note">Le chiffre qui compte : ta prise 1, celle qui ressemble à ta parole spontanée.</p></div>` : ""}
+    <div class="pair"><button class="btn big" data-href="voix">Terminer</button><button class="btn big pri" id="euAgain">Une autre question</button></div>`;
+  bindLinks(); $("#euAgain").onclick = () => renderEuh();
 }
 
-/* Autocritique : oui ou non à chaque question, puis carte suivante */
-function critique(body, c, measured = null) {
-  if (X.audio) card(body, `<p class="label">Réécoute avant de répondre</p><audio controls src="${X.audio}"></audio>`);
-  const qs = cardChecks(c); const ans = qs.map(() => null);
-  const box = card(body, `<p class="label">Autocritique</p>${qs.map((q, k) => `<div class="yn-row" data-k="${k}"><span>${q}</span><div class="yn2"><button data-v="0">Non</button><button data-v="1">Oui</button></div></div>`).join("")}`);
-  const nx = document.createElement("button"); nx.className = "btn big pri"; nx.disabled = true; nx.textContent = "Valider"; body.appendChild(nx);
-  box.querySelectorAll(".yn-row").forEach(row => row.querySelectorAll("button").forEach(b => b.onclick = () => {
-    ans[+row.dataset.k] = b.dataset.v === "1"; row.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
-    nx.disabled = ans.some(a => a === null);
-  }));
-  nx.onclick = () => {
-    const pts = ans.filter(Boolean).length + (measured === true ? 1 : 0), tot = ans.length + (measured == null ? 0 : 1);
-    drillEnd({ f: c.r ? c.r.f : "souffle", pts, tot });
-  };
-}
-
-function drillEnd(r) {
-  cleanup(); document.body.classList.remove("focus");
-  const pct = r.tot ? Math.round(r.pts / r.tot * 100) : 0;
-  S.x[X.id] = (S.x[X.id] || []).concat({ d: today(), pct, mode: X.mode, f: r.f }).slice(-100); save();
-  const h = S.x[X.id].slice(-10), avg = Math.round(mean(h.map(x => x.pct)));
+/* ---- Une phrase, trois essais : mesurer, refaire, garder le meilleur ---- */
+const ES = { last: -1 };
+function renderEssais() {
+  cleanup(); const api = mkApi();
+  let k; do { k = Math.floor(Math.random() * ESSAIS.length) } while (k === ES.last && ESSAIS.length > 1); ES.last = k;
+  const txt = ESSAIS[k], tries = [];
   view.innerHTML = `
-    <section class="hero"><p class="big-num">${r.pts}/${r.tot}</p><p class="muted">critères réussis${h.length > 1 ? ` · moyenne de tes ${h.length} dernières cartes : ${avg} %` : ""}</p></section>
-    ${r.pts < r.tot ? `<div class="group">${cellLink("f/" + r.f, "Relire la fiche", esc(ficheTitle(r.f)))}</div>` : ""}
-    <div class="pair"><button class="btn big" data-href="${X.id}">Terminer</button><button class="btn big pri" id="xAgain">Une autre carte</button></div>`;
-  bindLinks(); $("#xAgain").onclick = () => startDrill(X.id);
+    ${back("Voix", "voix")}
+    <header><h1 class="title">Une phrase, trois essais</h1><p class="sub">Sur ta note, sans hésitation, une courte pause avant le mot en gras, et la fin tenue jusqu'au bout.</p></header>
+    <section class="flash left"><p class="read">${txt}</p></section>
+    <div class="card"><div class="timer"><span class="say" id="esN">Essai 1 sur 3</span><button class="btn pri" id="esGo">Je dis la phrase</button></div></div>
+    <div id="esRes" class="stack"></div>`;
+  bindLinks();
+  let on = false, fr = [], f = null, w = null;
+  const go = $("#esGo");
+  go.onclick = async () => {
+    if (!on) {
+      if (!(await startMic())) { micHelp(view, () => go.click()); return }
+      if (!w) { w = zoneWidget($("#esRes")); api.onClean(() => w.destroy()) }
+      on = true; fr = []; go.textContent = "J'ai fini"; f = s => fr.push(s); api.on(f); return;
+    }
+    on = false; api.off(f);
+    const an = analyseVoice(fr, timbre(), []);
+    const zone = an ? an.zone : null, fin = an && an.fins != null ? an.fins >= 50 : null;
+    const score = an ? zone + (fin ? 20 : 0) : 0;
+    tries.push({ zone, fin, score });
+    const best = tries.reduce((a, b) => b.score > a.score ? b : a);
+    const rows = tries.map((t, i) => `<div class="cell"><div class="t"><b>Essai ${i + 1}${t === best && tries.length > 1 ? " · meilleur" : ""}</b><span>${t.zone == null ? "Pas assez de voix captée" : `Dans ta zone : ${t.zone} % · fin ${t.fin ? "tenue" : t.fin === false ? "qui s'éteint" : "non mesurée"}`}</span></div></div>`).join("");
+    let box = $("#esTries"); if (!box) { $("#esRes").insertAdjacentHTML("afterbegin", `<div class="group" id="esTries"></div>`); box = $("#esTries") }
+    box.innerHTML = rows;
+    if (tries.length < 3) { $("#esN").textContent = `Essai ${tries.length + 1} sur 3`; go.textContent = "Je refais" }
+    else {
+      S.es = S.es.concat(best.zone || 0).slice(-100); save();
+      $("#esN").textContent = "Terminé"; go.disabled = true;
+      $("#esRes").insertAdjacentHTML("beforeend", `<div class="pair"><button class="btn big" data-href="voix">Terminer</button><button class="btn big pri" id="esNext">Une autre phrase</button></div>`);
+      bindLinks(); $("#esNext").onclick = renderEssais;
+    }
+  };
 }
 
 /* ============ Navigation ============ */
@@ -790,11 +810,14 @@ function route() {
   const h = location.hash.slice(1), [a, b, c, d] = h.split("/");
   if (a === "hasard") { location.replace("#f/" + randomFiche() + "/comprendre/h"); return }
   const rnd = a === "f" && d === "h";
-  const tabId = rnd ? "hasard" : THEMES.some(T => T.id === a) ? a : ["mots", "reviser", "ajouter", "paquet"].includes(a) ? "mots" : a === "f" ? (findFiche(b) || { T: { id: "discours" } }).T.id : a === "ex" ? b : "discours";
+  const tabId = rnd ? "hasard" : THEMES.some(T => T.id === a) ? a : ["mots", "reviser", "ajouter", "paquet"].includes(a) ? "mots" : a === "f" ? (findFiche(b) || { T: { id: "discours" } }).T.id : a === "cartes" ? "discours" : ["repere", "euh", "essais"].includes(a) ? "voix" : "discours";
   $$(".tab").forEach(t => t.setAttribute("aria-current", t.dataset.go === tabId ? "page" : "false"));
   const T = THEMES.find(T => T.id === a);
   if (a === "f") renderFiche(b, c, rnd);
-  else if (a === "ex" && DRILLS[b]) renderDrillStart(b);
+  else if (a === "cartes") startCards();
+  else if (a === "repere") renderRepere();
+  else if (a === "euh") renderEuh();
+  else if (a === "essais") renderEssais();
   else if (a === "mots") renderMots();
   else if (a === "ajouter") renderAdd(b);
   else if (a === "paquet") renderPaquet();
