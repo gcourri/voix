@@ -17,7 +17,7 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 const nowS = () => performance.now() / 1000;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const f1 = v => (Math.round(v * 10) / 10).toString().replace(".", ",");
-const { LISTS, THEMES, VOCAB, PARLER_TEXTS, CARDS, REPERE, ESSAIS } = window;
+const { LISTS, THEMES, VOCAB, PARLER_TEXTS, CARDS, REPERE, ESSAIS, DECOUVRIR } = window;
 THEMES.forEach(T => { if (!T.groups) T.groups = [{ t: null, fiches: T.fiches }]; T.fiches = T.groups.flatMap(g => g.fiches.map(f => Object.assign(f, { g: g.t }))) });
 
 /* ============ Notes ============ */
@@ -495,6 +495,7 @@ function renderMots() {
       ${n ? `<button class="btn big ${d ? "pri" : ""}" data-href="reviser">${d ? "Réviser" : "Réviser quand même"}</button>` : `<button class="btn big pri" data-href="ajouter">Ajouter un premier mot</button>`}
     </section>
     <div class="group">
+      ${cellLink("decouvrir", "Découvrir des mots", decLeft().length + " mots à découvrir")}
       ${cellLink("ajouter", "Ajouter un mot", "")}
       ${cellLink("paquet", "Mon paquet", n + " mot" + (n > 1 ? "s" : ""))}
     </div>
@@ -803,6 +804,38 @@ function renderEssais() {
   };
 }
 
+/* ---- Découvrir des mots : un mot à la fois ---- */
+S.dk = S.dk || [];
+const DK = { cat: "Tous", last: null };
+const decLeft = () => DECOUVRIR.filter(w => !hasWord(w[0]) && !S.dk.includes(w[0]));
+function renderDecouvrir() {
+  const cats = ["Tous", ...new Set(DECOUVRIR.map(w => w[3]))];
+  let pool = decLeft().filter(w => DK.cat === "Tous" || w[3] === DK.cat);
+  if (pool.length > 1) pool = pool.filter(w => w[0] !== DK.last);
+  const w = pool.length ? pick(pool) : null; DK.last = w ? w[0] : null;
+  view.innerHTML = `
+    ${back("Mots", "mots")}
+    <header><h1 class="title">Découvrir</h1><p class="sub">Ajoute ceux qui t'aideraient à parler avec plus de précision.</p></header>
+    <div class="chips">${cats.map(k => `<button class="chip" aria-pressed="${k === DK.cat}" data-c="${k}">${k}</button>`).join("")}</div>
+    ${w ? `<section class="flash left">
+      <p class="label">${esc(w[3])}</p>
+      <p class="flash-w">${esc(w[0])}</p>
+      <p class="prose">${esc(w[1])}</p>
+      <p class="small muted">« ${esc(w[2])} »</p>
+    </section>
+    <button class="btn big pri" id="dkAdd">Ajouter à mon paquet</button>
+    <div class="pair"><button class="btn big" id="dkKnow">Je le connais</button><button class="btn big" id="dkNext">Passer</button></div>
+    <p class="foot-note" style="text-align:center">${pool.length} mot${pool.length > 1 ? "s" : ""} à découvrir${DK.cat === "Tous" ? "" : " dans cette catégorie"} · « Je le connais » ne le propose plus.</p>`
+    : `<div class="card"><p class="prose">Tu as fait le tour de ${DK.cat === "Tous" ? "tous les mots" : "cette catégorie"}.</p></div>`}
+    <p class="small" id="dkMsg" style="text-align:center;min-height:1.4em"></p>`;
+  bindLinks();
+  $$(".chips .chip").forEach(b => b.onclick = () => { DK.cat = b.dataset.c; renderDecouvrir() });
+  if (!w) return;
+  $("#dkAdd").onclick = () => { addWord(w[0], w[1], w[2]); renderDecouvrir(); $("#dkMsg").textContent = "« " + w[0] + " » ajouté à ton paquet." };
+  $("#dkKnow").onclick = () => { S.dk.push(w[0]); save(); renderDecouvrir() };
+  $("#dkNext").onclick = renderDecouvrir;
+}
+
 /* ============ Navigation ============ */
 function bindLinks() { $$("#view [data-href]").forEach(b => b.onclick = () => { location.hash = b.dataset.href }) }
 function route() {
@@ -810,7 +843,7 @@ function route() {
   const h = location.hash.slice(1), [a, b, c, d] = h.split("/");
   if (a === "hasard") { location.replace("#f/" + randomFiche() + "/comprendre/h"); return }
   const rnd = a === "f" && d === "h";
-  const tabId = rnd ? "hasard" : THEMES.some(T => T.id === a) ? a : ["mots", "reviser", "ajouter", "paquet"].includes(a) ? "mots" : a === "f" ? (findFiche(b) || { T: { id: "discours" } }).T.id : a === "cartes" ? "discours" : ["repere", "euh", "essais"].includes(a) ? "voix" : "discours";
+  const tabId = rnd ? "hasard" : THEMES.some(T => T.id === a) ? a : ["mots", "reviser", "ajouter", "paquet", "decouvrir"].includes(a) ? "mots" : a === "f" ? (findFiche(b) || { T: { id: "discours" } }).T.id : a === "cartes" ? "discours" : ["repere", "euh", "essais"].includes(a) ? "voix" : "discours";
   $$(".tab").forEach(t => t.setAttribute("aria-current", t.dataset.go === tabId ? "page" : "false"));
   const T = THEMES.find(T => T.id === a);
   if (a === "f") renderFiche(b, c, rnd);
@@ -819,6 +852,7 @@ function route() {
   else if (a === "euh") renderEuh();
   else if (a === "essais") renderEssais();
   else if (a === "mots") renderMots();
+  else if (a === "decouvrir") renderDecouvrir();
   else if (a === "ajouter") renderAdd(b);
   else if (a === "paquet") renderPaquet();
   else if (a === "reviser") startReview();

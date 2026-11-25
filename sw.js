@@ -1,5 +1,5 @@
 // Réseau d'abord, cache en secours : l'appli s'ouvre même hors connexion.
-const CACHE = "voix-v6";
+const CACHE = "voix-v7";
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
 self.addEventListener("fetch", e => {
