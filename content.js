@@ -23,7 +23,7 @@ window.LISTS.BRIEFS = ["« Je veux un logo moderne. »", "« Il faudrait que le 
 /* Chaque fiche : t (titre), sub (une ligne), key (la règle), why, how (3 étapes), ex (exemple, facultatif),
    train (exercice dans l'appli, facultatif), daily (à essayer dans la vraie vie). */
 window.THEMES = [
-{ id: "fond", t: "Fond", sub: "Organiser ses idées avant de parler.", fiches: [
+{ id: "discours", t: "Discours", sub: "Construire ses idées, et répondre aux autres.", groups: [{ t: "Construire", fiches: [
   { id: "destination", t: "La destination", sub: "Savoir où tu vas avant de parler",
     key: "Avant de parler, décide de ta dernière phrase.",
     why: "Si tu ne sais pas où tu vas, tu cherches en parlant : c'est de là que viennent les reprises et les détours. Connaître ta conclusion te donne un cap.",
@@ -78,7 +78,53 @@ window.THEMES = [
     how: ["Destination : ce que l'élève saura à la fin.", "Trois points, chacun avec un exemple concret.", "Une boucle : résume en une phrase."],
     train: { k: "rec", list: "MINICOURS", sec: 180, how: "Fais un cours de trois minutes sur ce sujet, pour un débutant.", checks: ["Un débutant aurait compris.", "Chaque point a un exemple."] },
     daily: "Explique à un proche une notion de ton métier (la grille, le contraste…) en moins de deux minutes." }
-] },
+] }, { t: "Répondre", fiches: [
+  { id: "repondre", t: "Répondre d'abord", sub: "La réponse, puis l'explication",
+    key: "La réponse d'abord, l'explication ensuite.",
+    why: "Quand on te pose une question, l'autre attend une réponse. Si tu commences par le contexte, il s'impatiente et te coupe.",
+    how: ["Réponds en une phrase : oui, non, un chiffre, une date.", "Donne la raison principale.", "Un exemple si besoin, puis répète la réponse."],
+    ex: { q: "Ce sera prêt vendredi ?", bad: "Alors, il y a eu des retours, le développeur…", good: "Non, lundi. Il manque les retours du client. Lundi matin, c'est sûr." },
+    train: { k: "ask", list: "QUICK", how: "L'appli te pose une question. Réponds : réponse, raison, exemple, réponse.", checks: ["Ma première phrase répond à la question."] },
+    daily: "Aujourd'hui, à chaque question, commence par la réponse en une phrase." },
+  { id: "reformuler", t: "Reformuler", sub: "Comprendre, et gagner du temps",
+    key: "Reformule la question avant de répondre.",
+    why: "Reformuler montre que tu as compris, te donne trois secondes pour réfléchir, et recentre la question à ta façon.",
+    how: ["« Si je comprends bien, tu te demandes si… »", "Vérifie : « C'est bien ça ? »", "Puis réponds."],
+    train: { k: "ask", list: "OBJ", how: "L'appli te fait une remarque. Reformule-la, puis réponds.", checks: ["J'ai reformulé avant de répondre.", "Ma reformulation est neutre, sans me défendre."] },
+    daily: "Aujourd'hui, reformule au moins une question avant d'y répondre." },
+  { id: "objection", t: "Gérer une objection", sub: "Reconnaître, puis répondre",
+    key: "Reconnais, réponds court, reviens à ton point.",
+    why: "Une objection n'est pas une attaque, c'est une information. Se justifier longuement lui donne raison. Reconnaître ce qui est juste te rend crédible.",
+    how: ["Reconnais : « Tu as raison sur ce point. »", "Réponds en une ou deux phrases.", "Reviens à ta destination."],
+    ex: { q: "C'est trop sobre.", good: "Je comprends. La sobriété est voulue : elle met le produit en avant. On peut ajouter de la couleur dans les visuels, pas dans la structure." },
+    train: { k: "ask", list: "OBJ", how: "L'appli te fait une objection. Reconnais, réponds court, reviens à ton point.", checks: ["J'ai reconnu avant de répondre.", "Réponse courte, sans me justifier."] },
+    daily: "À la prochaine critique, commence par « Tu as raison sur… » avant ta réponse." },
+  { id: "main", t: "Reprendre la main", sub: "Quand on te coupe ou qu'on dévie",
+    key: "Laisse finir, reconnais, reviens à ton fil.",
+    why: "Quand on te coupe ou qu'on dévie, tu perds ton fil et l'autre prend la conversation. Une phrase de transition te permet de revenir sans conflit.",
+    how: ["Laisse l'autre finir sa phrase.", "Reconnais en quelques mots : « Bonne question. »", "Ramène : « Je termine mon point, et on en parle juste après. »"],
+    train: { k: "rec", list: "PROJETS", sec: 90, cut: "DIGRESSIONS", how: "Présente. L'appli va t'interrompre : reconnais, puis reviens à ton fil.", checks: ["Je suis revenu à mon fil après l'interruption.", "Sans m'agacer ni me justifier."] },
+    daily: "Aujourd'hui, si on te coupe, dis « Je termine mon idée, et je t'écoute »." },
+  { id: "sais", t: "« Je ne sais pas »", sub: "Rester crédible sans la réponse",
+    key: "Dis ce que tu sais, ce que tu ne sais pas, et quand tu sauras.",
+    why: "Inventer ou noyer le poisson se voit. Admettre clairement ce que tu ne sais pas, avec une suite concrète, renforce la confiance.",
+    how: ["Dis ce que tu sais.", "Dis ce que tu ne sais pas, sans t'excuser.", "Donne une suite : quoi, et quand."],
+    ex: { q: "La police est libre de droits ?", good: "Je vérifie la licence aujourd'hui et je te confirme avant 17 h." },
+    train: { k: "ask", list: "DOUTES", how: "L'appli te décrit une situation. Réponds avec une suite concrète et une échéance.", checks: ["Pas de « je pense que peut-être ».", "Une suite concrète, avec une échéance."] },
+    daily: "La prochaine fois que tu ne sais pas, réponds avec une échéance précise." },
+  { id: "debattre", t: "Débattre", sub: "Concéder, puis défendre",
+    key: "Concède un point, puis défends ta position.",
+    why: "Celui qui reconnaît ce qui est juste chez l'autre paraît plus raisonnable, et devient plus convaincant. La concession désarme, l'argument conclut.",
+    how: ["Concède : « C'est vrai que… »", "Oppose : « Mais… », avec ton argument principal.", "Conclus par ta position, en une phrase."],
+    train: { k: "rec", list: "DEBATS", sec: 90, cut: "CONTRA", how: "Défends ta position. L'appli va te contredire : concède, puis argumente.", checks: ["J'ai concédé un point.", "Ma position est claire à la fin."] },
+    daily: "Aujourd'hui, dans un désaccord, commence par « C'est vrai que… mais… »." },
+  { id: "questions", t: "Poser des questions", sub: "Comprendre avant de proposer",
+    key: "Pose une question avant de proposer.",
+    why: "Une bonne question fait parler l'autre et te donne des informations. Celui qui pose les questions guide la conversation.",
+    how: ["Ouvre : « Qu'est-ce qui compte le plus pour toi ? »", "Creuse : « C'est-à-dire ? », « Par exemple ? »", "Reformule, puis propose."],
+    train: { k: "ask", list: "BRIEFS", how: "Un client te donne une demande floue. Pose-lui trois questions pour comprendre ce qu'il veut vraiment.", checks: ["Mes questions sont ouvertes.", "Elles vont vers le besoin réel."] },
+    daily: "À ta prochaine demande floue, réponds par une question avant de proposer quoi que ce soit." }
+] }] },
 
 { id: "voix", t: "Voix", sub: "La forme : comment tu le dis.", fiches: [
   { id: "note", t: "Ta note naturelle", sub: "Trouver ton timbre, et le garder",
@@ -160,54 +206,6 @@ window.THEMES = [
     how: ["Inspire sur 4 temps, expire sur 6 temps, trois fois.", "Ancre tes pieds, relâche les épaules.", "Connais ta première phrase par cœur : le plus dur, c'est de commencer."],
     train: { k: "timer", sec: 60, how: "La routine : trois respirations 4-6, ancrage des pieds, puis dis ta première phrase à voix haute." },
     daily: "Avant ta prochaine prise de parole, fais trois expirations longues." }
-] },
-
-{ id: "echange", t: "Échange", sub: "L'interaction : répondre, tenir, convaincre.", fiches: [
-  { id: "repondre", t: "Répondre d'abord", sub: "La réponse, puis l'explication",
-    key: "La réponse d'abord, l'explication ensuite.",
-    why: "Quand on te pose une question, l'autre attend une réponse. Si tu commences par le contexte, il s'impatiente et te coupe.",
-    how: ["Réponds en une phrase : oui, non, un chiffre, une date.", "Donne la raison principale.", "Un exemple si besoin, puis répète la réponse."],
-    ex: { q: "Ce sera prêt vendredi ?", bad: "Alors, il y a eu des retours, le développeur…", good: "Non, lundi. Il manque les retours du client. Lundi matin, c'est sûr." },
-    train: { k: "ask", list: "QUICK", how: "L'appli te pose une question. Réponds : réponse, raison, exemple, réponse.", checks: ["Ma première phrase répond à la question."] },
-    daily: "Aujourd'hui, à chaque question, commence par la réponse en une phrase." },
-  { id: "reformuler", t: "Reformuler", sub: "Comprendre, et gagner du temps",
-    key: "Reformule la question avant de répondre.",
-    why: "Reformuler montre que tu as compris, te donne trois secondes pour réfléchir, et recentre la question à ta façon.",
-    how: ["« Si je comprends bien, tu te demandes si… »", "Vérifie : « C'est bien ça ? »", "Puis réponds."],
-    train: { k: "ask", list: "OBJ", how: "L'appli te fait une remarque. Reformule-la, puis réponds.", checks: ["J'ai reformulé avant de répondre.", "Ma reformulation est neutre, sans me défendre."] },
-    daily: "Aujourd'hui, reformule au moins une question avant d'y répondre." },
-  { id: "objection", t: "Gérer une objection", sub: "Reconnaître, puis répondre",
-    key: "Reconnais, réponds court, reviens à ton point.",
-    why: "Une objection n'est pas une attaque, c'est une information. Se justifier longuement lui donne raison. Reconnaître ce qui est juste te rend crédible.",
-    how: ["Reconnais : « Tu as raison sur ce point. »", "Réponds en une ou deux phrases.", "Reviens à ta destination."],
-    ex: { q: "C'est trop sobre.", good: "Je comprends. La sobriété est voulue : elle met le produit en avant. On peut ajouter de la couleur dans les visuels, pas dans la structure." },
-    train: { k: "ask", list: "OBJ", how: "L'appli te fait une objection. Reconnais, réponds court, reviens à ton point.", checks: ["J'ai reconnu avant de répondre.", "Réponse courte, sans me justifier."] },
-    daily: "À la prochaine critique, commence par « Tu as raison sur… » avant ta réponse." },
-  { id: "main", t: "Reprendre la main", sub: "Quand on te coupe ou qu'on dévie",
-    key: "Laisse finir, reconnais, reviens à ton fil.",
-    why: "Quand on te coupe ou qu'on dévie, tu perds ton fil et l'autre prend la conversation. Une phrase de transition te permet de revenir sans conflit.",
-    how: ["Laisse l'autre finir sa phrase.", "Reconnais en quelques mots : « Bonne question. »", "Ramène : « Je termine mon point, et on en parle juste après. »"],
-    train: { k: "rec", list: "PROJETS", sec: 90, cut: "DIGRESSIONS", how: "Présente. L'appli va t'interrompre : reconnais, puis reviens à ton fil.", checks: ["Je suis revenu à mon fil après l'interruption.", "Sans m'agacer ni me justifier."] },
-    daily: "Aujourd'hui, si on te coupe, dis « Je termine mon idée, et je t'écoute »." },
-  { id: "sais", t: "« Je ne sais pas »", sub: "Rester crédible sans la réponse",
-    key: "Dis ce que tu sais, ce que tu ne sais pas, et quand tu sauras.",
-    why: "Inventer ou noyer le poisson se voit. Admettre clairement ce que tu ne sais pas, avec une suite concrète, renforce la confiance.",
-    how: ["Dis ce que tu sais.", "Dis ce que tu ne sais pas, sans t'excuser.", "Donne une suite : quoi, et quand."],
-    ex: { q: "La police est libre de droits ?", good: "Je vérifie la licence aujourd'hui et je te confirme avant 17 h." },
-    train: { k: "ask", list: "DOUTES", how: "L'appli te décrit une situation. Réponds avec une suite concrète et une échéance.", checks: ["Pas de « je pense que peut-être ».", "Une suite concrète, avec une échéance."] },
-    daily: "La prochaine fois que tu ne sais pas, réponds avec une échéance précise." },
-  { id: "debattre", t: "Débattre", sub: "Concéder, puis défendre",
-    key: "Concède un point, puis défends ta position.",
-    why: "Celui qui reconnaît ce qui est juste chez l'autre paraît plus raisonnable, et devient plus convaincant. La concession désarme, l'argument conclut.",
-    how: ["Concède : « C'est vrai que… »", "Oppose : « Mais… », avec ton argument principal.", "Conclus par ta position, en une phrase."],
-    train: { k: "rec", list: "DEBATS", sec: 90, cut: "CONTRA", how: "Défends ta position. L'appli va te contredire : concède, puis argumente.", checks: ["J'ai concédé un point.", "Ma position est claire à la fin."] },
-    daily: "Aujourd'hui, dans un désaccord, commence par « C'est vrai que… mais… »." },
-  { id: "questions", t: "Poser des questions", sub: "Comprendre avant de proposer",
-    key: "Pose une question avant de proposer.",
-    why: "Une bonne question fait parler l'autre et te donne des informations. Celui qui pose les questions guide la conversation.",
-    how: ["Ouvre : « Qu'est-ce qui compte le plus pour toi ? »", "Creuse : « C'est-à-dire ? », « Par exemple ? »", "Reformule, puis propose."],
-    train: { k: "ask", list: "BRIEFS", how: "Un client te donne une demande floue. Pose-lui trois questions pour comprendre ce qu'il veut vraiment.", checks: ["Mes questions sont ouvertes.", "Elles vont vers le besoin réel."] },
-    daily: "À ta prochaine demande floue, réponds par une question avant de proposer quoi que ce soit." }
 ] }
 ];
 
@@ -293,4 +291,61 @@ window.VOCAB = [
       ["sous réserve de", "Pose une condition claire.", "Sous réserve de validation, on lance lundi."],
       ["en l'état", "Tel que c'est aujourd'hui.", "En l'état, le texte est trop long."]
     ] }
+];
+
+/* ============ Entraînements globaux ============ */
+/* Discours : une question, une contrainte tirée d'une fiche, un temps limité, puis une autocritique.
+   g : "c" (construire) ou "r" (répondre). w : champs à remplir en mode silencieux. */
+window.DRILL_DISCOURS = [
+  { f: "destination", g: "c", c: "Commence par ta conclusion.", list: "AVIS", w: ["Ma conclusion", "Mes points", "Ma boucle"],
+    oral: ["Ma première phrase était ma conclusion."], silent: ["Ma conclusion tient en une phrase."] },
+  { f: "plan", g: "c", c: "Annonce deux points, puis développe-les.", list: "AVIS", w: ["Destination", "Point 1", "Point 2"],
+    oral: ["J'ai annoncé « deux points ».", "J'en ai donné deux, pas un de plus."], silent: ["J'ai exactement deux points, bien distincts."] },
+  { f: "phrase", g: "c", c: "Uniquement des phrases courtes, avec de vrais points.", list: "QUICK", w: ["Phrase 1", "Phrase 2", "Phrase 3"],
+    oral: ["Mes phrases étaient courtes.", "Je n'en ai abandonné aucune en route."], silent: ["Chaque phrase fait moins de quinze mots."] },
+  { f: "motscles", g: "c", c: "Choisis trois mots-clés, et fais entendre chacun deux fois.", list: "PROJETS", w: ["Destination", "Mes trois mots-clés"],
+    oral: ["Chaque mot-clé s'est entendu deux fois."], silent: ["Mes mots-clés sont précis, pas génériques."] },
+  { f: "boucler", g: "c", c: "Termine par ta phrase de départ, puis silence.", list: "AVIS", w: ["Phrase de départ", "Mes points", "Phrase de fin"],
+    oral: ["J'ai fini sur ma phrase de départ.", "Sans « voilà » ni ajout après."], silent: ["Ma phrase de fin reprend ma phrase de départ."] },
+  { f: "choix", g: "c", c: "Défends un choix : intention, choix, effet.", list: "PROJETS", w: ["Intention", "Choix", "Effet"],
+    oral: ["J'ai dit l'intention avant le choix.", "J'ai dit l'effet produit."], silent: ["L'effet découle vraiment du choix."] },
+  { f: "raconter", g: "c", c: "Raconte-le : situation, problème, solution.", list: "PROJETS", w: ["Situation", "Problème", "Solution"],
+    oral: ["On entendait clairement le problème.", "La solution y répondait."], silent: ["Le problème crée une attente."] },
+  { f: "repondre", g: "r", c: "Réponds d'abord, en une phrase. Explique ensuite.", list: "QUICK", w: ["Ma réponse en une phrase", "Ma raison", "Je répète ma réponse"],
+    oral: ["Ma première phrase répondait à la question."], silent: ["Ma réponse tient en une phrase."] },
+  { f: "reformuler", g: "r", c: "Reformule avant de répondre.", list: "OBJ", w: ["Ma reformulation", "Ma réponse"],
+    oral: ["J'ai reformulé avant de répondre.", "Ma reformulation était neutre."], silent: ["Ma reformulation est neutre, sans me défendre."] },
+  { f: "objection", g: "r", c: "Reconnais ce qui est juste, réponds court, reviens à ton point.", list: "OBJ", w: ["Je reconnais", "Je réponds", "Je reviens à"],
+    oral: ["J'ai reconnu avant de répondre.", "Je ne me suis pas justifié longuement."], silent: ["Ma réponse tient en une ou deux phrases."] },
+  { f: "main", g: "r", c: "Présente. On va te couper : reconnais, puis reviens à ton fil.", list: "PROJETS", cut: "DIGRESSIONS", w: ["Mon point", "Ma phrase pour reprendre la main"],
+    oral: ["Je suis revenu à mon fil après l'interruption.", "Sans m'agacer."], silent: ["Ma phrase de reprise est courte et polie."] },
+  { f: "sais", g: "r", c: "Tu n'as pas la réponse : dis ce que tu sais, et quand tu sauras.", list: "DOUTES", w: ["Ce que je sais", "Ce que je ne sais pas", "Quand je saurai"],
+    oral: ["Aucun « je pense que peut-être ».", "J'ai donné une échéance précise."], silent: ["Mon échéance est précise."] },
+  { f: "debattre", g: "r", c: "Concède un point, puis défends ta position.", list: "DEBATS", w: ["Je concède", "Mais", "Ma position"],
+    oral: ["J'ai concédé un point.", "Ma position était claire à la fin."], silent: ["Ma concession est sincère, pas ironique."] },
+  { f: "questions", g: "r", c: "Ne propose rien : pose trois questions pour comprendre.", list: "BRIEFS", w: ["Question 1", "Question 2", "Question 3"],
+    oral: ["Mes questions étaient ouvertes."], silent: ["Mes questions vont vers le besoin réel."] }
+];
+window.DRILL_DISCOURS_ALL = { oral: "Je suis resté dans le temps.", silent: "Quelqu'un qui ne connaît pas le sujet comprendrait." };
+
+/* Voix : un texte court, une contrainte tirée d'une fiche. m : mesure automatique au micro. */
+window.DRILL_VOIX = [
+  { f: "debit", c: "Lis lentement : au moins {s} secondes.", m: "dur", oral: ["J'ai articulé les fins de mots."] },
+  { f: "note", c: "Reste sur ta note naturelle : 80 % du temps dans ta zone.", m: "zone", oral: ["J'ai commencé sur la note du « mm-hmm »."] },
+  { f: "fins", c: "Tiens chaque fin de phrase jusqu'au dernier mot.", m: "fins", oral: ["Aucune fin ne montait comme une question."] },
+  { f: "melodie", c: "Fais ressortir les mots en gras.", oral: ["Les mots en gras ressortaient vraiment.", "Le reste est resté naturel."] },
+  { f: "silence", c: "Une courte pause juste avant chaque mot en gras.", oral: ["J'ai marqué une pause avant chaque mot en gras.", "Mes pauses étaient calmes, pas hésitantes."] },
+  { f: "souffle", c: "Respire à chaque point, sans te presser.", oral: ["J'ai respiré à chaque point.", "Je n'ai jamais manqué d'air."] },
+  { f: "doute", c: "Zéro « euh ». S'il t'en échappe un, reprends la phrase.", oral: ["Aucun « euh » dans la version finale."] }
+];
+window.DRILL_VOIX_SILENT = ["J'ai marqué une respiration à chaque point.", "Au plus un ou deux mots appuyés par phrase.", "Les mots appuyés portent le sens de la phrase."];
+window.DRILL_TEXTS = [
+  "Ce site doit être <b>simple</b>. Nos clients sont pressés. Ils veulent trouver le <b>prix</b> en trois secondes. Tout le reste est secondaire.",
+  "J'ai choisi une seule <b>couleur</b>. Elle se reconnaît de loin. Elle fonctionne sur papier comme sur écran. Et elle coûte <b>moins cher</b> à imprimer.",
+  "Le logo actuel n'est pas mauvais. Mais il est <b>illisible</b> en petit. Sur un téléphone, on ne le reconnaît plus. Je propose de le <b>simplifier</b>, pas de le changer.",
+  "Nous avons deux pistes. La première est <b>audacieuse</b> : elle fera parler. La seconde est plus <b>sûre</b> : elle rassurera. Je recommande la première.",
+  "Une bonne affiche se lit en <b>deux secondes</b>. Un titre, une image, une information. Si l'on hésite, c'est qu'il y a <b>trop</b> de choses.",
+  "Le projet est en retard d'une <b>semaine</b>. La cause est simple : les textes sont arrivés tard. Pour rattraper, je propose de livrer la page d'accueil <b>vendredi</b>, et le reste lundi.",
+  "Le blanc n'est pas du vide. C'est de la <b>respiration</b>. Il guide l'œil vers ce qui compte. Une page pleine ne dit <b>rien</b>.",
+  "Je ne suis pas d'accord. Agrandir le logo ne le rendra pas plus <b>visible</b>. Ce qui le rendra visible, c'est l'<b>espace</b> autour de lui."
 ];

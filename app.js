@@ -17,7 +17,8 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 const nowS = () => performance.now() / 1000;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const f1 = v => (Math.round(v * 10) / 10).toString().replace(".", ",");
-const { LISTS, THEMES, VOCAB, PARLER_TEXTS } = window;
+const { LISTS, THEMES, VOCAB, PARLER_TEXTS, DRILL_DISCOURS, DRILL_DISCOURS_ALL, DRILL_VOIX, DRILL_VOIX_SILENT, DRILL_TEXTS } = window;
+THEMES.forEach(T => { if (!T.groups) T.groups = [{ t: null, fiches: T.fiches }]; T.fiches = T.groups.flatMap(g => g.fiches.map(f => Object.assign(f, { g: g.t }))) });
 
 /* ============ Notes ============ */
 const NOMS = ["Do", "Do♯", "Ré", "Ré♯", "Mi", "Fa", "Fa♯", "Sol", "Sol♯", "La", "La♯", "Si"];
@@ -424,16 +425,20 @@ function addWord(w, d, e) {
 
 /* ============ Écrans ============ */
 const view = $("#view");
-const ICON = { fond: "parole", voix: "voix", corps: "corps", echange: "echange", mots: "mots" };
+const ICON = { discours: "parole", voix: "voix", corps: "corps", mots: "mots" };
 const back = (label, hash) => `<button class="back" data-href="${hash}"><span aria-hidden="true">‹</span> ${esc(label)}</button>`;
 const cellLink = (href, title, sub, right = '<span class="chev">›</span>', lead = "") => `<button class="cell" data-href="${href}">${lead}<div class="t"><b>${title}</b>${sub ? `<span>${sub}</span>` : ""}</div>${right}</button>`;
 const seenMark = () => '<span class="chev">›</span>';
 
 function renderTheme(T) {
+  let n = 0;
   view.innerHTML = `
     <header><h1 class="large">${T.t}</h1><p class="sub">${T.sub}</p></header>
-    <div class="group">${T.fiches.map((f, i) => cellLink("f/" + f.id, esc(f.t), esc(f.sub), seenMark(f.id), `<div class="ic ${ICON[T.id]}">${i + 1}</div>`)).join("")}</div>`;
+    ${DRILLS[T.id] ? drillHero(T.id) : ""}
+    ${T.groups.map(g => `<div>${g.t || DRILLS[T.id] ? `<p class="section-label">${g.t || "Les fiches"}</p>` : ""}<div class="group">${g.fiches.map(f => cellLink("f/" + f.id, esc(f.t), esc(f.sub), '<span class="chev">›</span>', `<div class="ic ${ICON[T.id]}">${++n}</div>`)).join("")}</div></div>`).join("")}`;
 }
+const ALL = () => [...THEMES.flatMap(T => T.fiches.map(f => f.id)), ...VOCAB.map(f => f.id)];
+function randomFiche(not) { return pick(ALL().filter(x => x !== not)) }
 
 function findFiche(id) {
   for (const T of THEMES) { const i = T.fiches.findIndex(f => f.id === id); if (i >= 0) return { T, F: T.fiches[i], i, list: T.fiches } }
@@ -441,7 +446,7 @@ function findFiche(id) {
   return null;
 }
 
-function renderFiche(id, tab) {
+function renderFiche(id, tab, rnd) {
   const r = findFiche(id); if (!r) { location.hash = ""; return }
   const { T, F, i, list, vocab } = r;
   const trains = F.train ? [].concat(F.train) : [];
@@ -449,15 +454,17 @@ function renderFiche(id, tab) {
   if (vocab) tabs.push(["mots", "Les mots"]); else if (trains.length) tabs.push(["entrainer", "S'entraîner"]);
   tabs.push(["quotidien", "Au quotidien"]);
   const cur = tabs.some(t => t[0] === tab) ? tab : "comprendre";
-  const next = list[i + 1];
+  const next = list[i + 1], gl = F.g ? list.filter(f => f.g === F.g) : list, gi = gl.indexOf(F);
+  const hp = rnd ? "/h" : "";
   view.innerHTML = `
-    ${back(T.t, T.id)}
-    <header><p class="eyebrow ${ICON[T.id]}">${T.t} · ${i + 1} sur ${list.length}</p><h1 class="title">${esc(F.t)}</h1></header>
+    ${rnd ? `<div class="rv-top">${back(T.t, T.id)}<button class="btn sm" id="again">Une autre</button></div>` : back(T.t, T.id)}
+    <header><p class="eyebrow ${ICON[T.id]}">${T.t}${F.g ? " · " + F.g : ""} · ${gi + 1} sur ${gl.length}</p><h1 class="title">${esc(F.t)}</h1></header>
     <div class="keycard"><p>${F.key}</p></div>
-    <div class="seg" role="tablist">${tabs.map(t => `<button role="tab" aria-selected="${t[0] === cur}" data-href="f/${F.id}/${t[0]}">${t[1]}</button>`).join("")}</div>
+    <div class="seg" role="tablist">${tabs.map(t => `<button role="tab" aria-selected="${t[0] === cur}" data-href="f/${F.id}/${t[0]}${hp}">${t[1]}</button>`).join("")}</div>
     <div class="stack" id="panel"></div>
     ${next ? `<div class="group">${cellLink("f/" + next.id, "Fiche suivante", esc(next.t))}</div>` : ""}`;
   const p = $("#panel");
+  if (rnd) $("#again").onclick = () => { location.hash = "f/" + randomFiche(F.id) + "/comprendre/h" };
   if (cur === "comprendre") {
     p.insertAdjacentHTML("beforeend", `<p class="prose">${F.why}</p>`);
     if (F.how) card(p, `<p class="label">Comment</p><ol class="steps">${F.how.map(h => `<li>${h}</li>`).join("")}</ol>`);
@@ -470,8 +477,8 @@ function renderFiche(id, tab) {
     p.innerHTML = `<div class="group">${F.words.map(w => `<div class="cell"><div class="t"><b>${esc(w[0])}</b><span>${esc(w[1])}</span></div><button class="btn sm add" data-w="${esc(w[0])}" ${hasWord(w[0]) ? "disabled" : ""}>${hasWord(w[0]) ? "Ajouté" : "Ajouter"}</button></div>`).join("")}</div>
       <button class="btn big ${all ? "" : "pri"}" id="addAll" ${all ? "disabled" : ""}>${all ? "Tous les mots sont dans ton paquet" : "Tout ajouter à mon paquet"}</button>`;
     const addOne = w => { const x = F.words.find(y => y[0] === w); if (x) addWord(x[0], x[1], x[2]) };
-    $$("#panel .add").forEach(b => b.onclick = () => { addOne(b.dataset.w); renderFiche(F.id, "mots") });
-    $("#addAll").onclick = () => { F.words.forEach(w => addOne(w[0])); renderFiche(F.id, "mots") };
+    $$("#panel .add").forEach(b => b.onclick = () => { addOne(b.dataset.w); renderFiche(F.id, "mots", rnd) });
+    $("#addAll").onclick = () => { F.words.forEach(w => addOne(w[0])); renderFiche(F.id, "mots", rnd) };
   } else {
     card(p, `<p class="label">À essayer</p><p class="daily">${F.daily}</p>`);
     p.insertAdjacentHTML("beforeend", `<p class="foot-note" style="padding:0 4px">Sans obligation : essaie-le quand l'occasion se présente.</p>`);
@@ -565,21 +572,241 @@ function renderReview() {
   }
 }
 
+/* ============ Entraînements globaux : 5 cartes, à voix haute ou en silence ============ */
+const DRILLS = {
+  discours: { t: "Structurer à chaud", sub: "Une question, une contrainte, un temps limité, puis ton autocritique." },
+  voix: { t: "Lecture sous contrainte", sub: "Un texte court, une contrainte, puis ton autocritique. À voix haute, le micro mesure ce qu'il peut." }
+};
+const NCARDS = 5;
+const X = { id: null, mode: "oral", rec: false, cards: [], i: 0, phase: "ready", res: [], audio: null, data: null };
+S.x = S.x || {}; S.pref = S.pref || { mode: "oral", rec: false };
+const ficheTitle = id => (findFiche(id) || { F: { t: "" } }).F.t;
+const shuffle = a => [...a].sort(() => Math.random() - .5);
+const wordsOf = h => h.replace(/<[^>]+>/g, "").split(/\s+/).filter(Boolean).length;
+
+function drillHero(id) {
+  const D = DRILLS[id], h = S.x[id] || [], lastS = h[h.length - 1];
+  return `<section class="hero drill">
+    <p class="label">S'entraîner sur toute la section</p>
+    <p class="drill-t">${D.t}</p>
+    <p class="small muted">${NCARDS} cartes${lastS ? ` · dernière série : <b>${lastS.pct} %</b>` : ""}</p>
+    <button class="btn big pri" data-href="ex/${id}">Commencer</button>
+  </section>`;
+}
+
+function renderDrillStart(id) {
+  const D = DRILLS[id]; X.id = id;
+  const h = (S.x[id] || []).slice(-5);
+  view.innerHTML = `
+    ${back(THEMES.find(T => T.id === id).t, id)}
+    <header><h1 class="title">${D.t}</h1><p class="sub">${D.sub}</p></header>
+    <div><p class="section-label">Où es-tu ?</p>
+    <div class="seg" role="tablist" id="xMode"><button role="tab" data-m="oral" aria-selected="${S.pref.mode === "oral"}">À voix haute</button><button role="tab" data-m="silent" aria-selected="${S.pref.mode === "silent"}">En silence</button></div>
+    <p class="foot-note" id="xModeNote"></p></div>
+    <div class="group" id="xRecG"><label class="cell"><div class="t"><b>M'enregistrer</b><span>Pour réécouter avant l'autocritique</span></div><input type="checkbox" class="switch" id="xRec" ${S.pref.rec ? "checked" : ""}></label></div>
+    <button class="btn big pri" id="xGo">Commencer les ${NCARDS} cartes</button>
+    ${h.length ? `<div><p class="section-label">Tes dernières séries</p><div class="group">${h.slice().reverse().map(r => `<div class="cell"><div class="t"><b>${r.pct} %</b><span>${r.d.split("-").reverse().slice(0, 2).join("/")} · ${r.mode === "oral" ? "à voix haute" : "en silence"}</span></div></div>`).join("")}</div></div>` : ""}`;
+  bindLinks();
+  const upd = () => {
+    $$("#xMode button").forEach(b => b.setAttribute("aria-selected", b.dataset.m === S.pref.mode));
+    $("#xRecG").hidden = S.pref.mode !== "oral";
+    $("#xModeNote").textContent = S.pref.mode === "oral" ? (id === "voix" ? "Tu lis le texte à voix haute." : "Tu réponds à voix haute, dans le temps imparti.") : (id === "voix" ? "Tu annotes le texte : où respirer, quels mots appuyer." : "Tu écris ta structure en mots-clés, dans le temps imparti.");
+  };
+  $$("#xMode button").forEach(b => b.onclick = () => { S.pref.mode = b.dataset.m; save(); upd() });
+  $("#xRec").onchange = e => { S.pref.rec = e.target.checked; save() };
+  $("#xGo").onclick = () => startDrill(id);
+  upd();
+}
+
+function startDrill(id) {
+  X.id = id; X.mode = S.pref.mode; X.rec = X.mode === "oral" && S.pref.rec; X.i = 0; X.res = [];
+  if (id === "discours") {
+    const rules = shuffle(DRILL_DISCOURS).slice(0, NCARDS);
+    X.cards = rules.map(r => ({ r, q: pick(LISTS[r.list]) }));
+  } else {
+    const rules = X.mode === "oral" ? shuffle(DRILL_VOIX).slice(0, NCARDS) : Array(NCARDS).fill(null);
+    const texts = shuffle(DRILL_TEXTS);
+    X.cards = rules.map((r, k) => ({ r, q: texts[k % texts.length] }));
+  }
+  document.body.classList.add("focus");
+  renderCard("ready");
+}
+
+function cardChecks(c) {
+  if (X.id === "discours") return [...(X.mode === "oral" ? c.r.oral : c.r.silent), X.mode === "oral" ? DRILL_DISCOURS_ALL.oral : DRILL_DISCOURS_ALL.silent];
+  return X.mode === "oral" ? c.r.oral : DRILL_VOIX_SILENT;
+}
+
+function renderCard(phase) {
+  cleanup(); const api = mkApi();
+  X.phase = phase; const c = X.cards[X.i];
+  if (phase === "ready") { X.audio = null; X.data = null }
+  const oral = X.mode === "oral", isR = c.r && c.r.g === "r";
+  let rule, src;
+  if (X.id === "discours") { rule = c.r.c; src = c.r.f }
+  else if (oral) { const s = Math.max(15, Math.round(wordsOf(c.q) / 2.4)); rule = c.r.c.replace("{s}", s); c.secMin = s; src = c.r.f }
+  else { rule = "Prépare la lecture : touche un mot pour l'appuyer, touche-le encore pour marquer une respiration après lui."; src = "souffle" }
+  view.innerHTML = `
+    <div class="rv-top"><button class="close" id="xQuit" aria-label="Arrêter la série">✕</button><span class="small muted">Carte ${X.i + 1} sur ${NCARDS}</span></div>
+    <div class="bar"><i style="width:${X.i / NCARDS * 100}%"></i></div>
+    <div class="keycard"><p class="xs-label">${X.id === "voix" && !oral ? "Annoter le texte" : "Contrainte · " + esc(ficheTitle(src))}</p><p>${rule}</p></div>
+    <div class="stack" id="xBody"></div>`;
+  $("#xQuit").onclick = () => { if (confirm("Arrêter la série ?")) { document.body.classList.remove("focus"); location.hash = X.id } };
+  const body = $("#xBody");
+  if (X.id === "discours") drillDiscours(body, api, c, phase, oral, isR);
+  else drillVoix(body, api, c, phase, oral);
+}
+
+/* Lance un enregistrement si demandé ; renvoie une fonction d'arrêt */
+async function maybeRecord(api) {
+  if (!X.rec) return () => {};
+  const r = await recordInto(url => { X.audio = url });
+  if (!r) return () => {};
+  api.onClean(() => r.stop());
+  return () => r.stop();
+}
+
+function drillDiscours(body, api, c, phase, oral, isR) {
+  const qLabel = isR ? (c.r.list === "BRIEFS" ? "Le client te dit" : c.r.list === "DOUTES" ? "La situation" : "On te dit") : "Sujet";
+  const qCard = card(body, `<p class="label">${qLabel}</p><p class="topic">${esc(c.q)}</p>`);
+  if (phase === "ready") {
+    if (!oral) { body.insertAdjacentHTML("beforeend", `<p class="prose">Tu auras <b>60 secondes</b> pour écrire ta structure en mots-clés.</p>`) }
+    else body.insertAdjacentHTML("beforeend", `<p class="prose"><b>10 secondes</b> pour réfléchir, puis <b>45 secondes</b> pour répondre${X.rec ? ", enregistré" : ""}.</p>`);
+    const b = document.createElement("button"); b.className = "btn big pri"; b.textContent = "C'est parti"; body.appendChild(b);
+    b.onclick = () => renderCard("go");
+    if (isR && oral) setTimeout(() => api.alive() && say(c.q), 300);
+    return;
+  }
+  if (phase === "go") {
+    if (!oral) {
+      const f = card(body, `<div class="timer"><span class="clock">1:00</span><span class="small muted">Mots-clés seulement</span></div><div class="fields">${c.r.w.map((w, k) => `<label>${w}<input data-k="${k}" autocomplete="off"></label>`).join("")}</div>`);
+      const clk = f.querySelector(".clock"), ins = [...f.querySelectorAll("input")]; ins[0].focus();
+      const t0 = nowS(); let done = false;
+      const end = () => { if (done) return; done = true; clearInterval(iv); X.data = ins.map(i => i.value.trim()); renderCard("critique") };
+      const iv = setInterval(() => { const s = 60 - (nowS() - t0); clk.textContent = fmt(s); if (s <= 10) clk.style.color = "var(--off)"; if (s <= 0) { beep(); end() } }, 250);
+      api.onClean(() => clearInterval(iv));
+      const b = document.createElement("button"); b.className = "btn big"; b.textContent = "J'ai fini"; body.appendChild(b); b.onclick = end;
+      return;
+    }
+    const tm = card(body, `<p class="label ph">Réfléchis</p><div class="timer"><span class="clock">0:10</span></div><p class="small muted hint"></p>`);
+    const clk = tm.querySelector(".clock"), ph = tm.querySelector(".ph"), hint = tm.querySelector(".hint");
+    let t0 = nowS(), stage = "prep", stopRec = () => {}, cuts = [], done = false;
+    const pool = c.r.cut ? shuffle(LISTS[c.r.cut]) : [];
+    const end = () => { if (done) return; done = true; clearInterval(iv); stopRec(); try { speechSynthesis.cancel() } catch (e) {} setTimeout(() => api.alive() && renderCard("critique"), X.rec ? 350 : 0) };
+    const iv = setInterval(async () => {
+      const s = nowS() - t0;
+      if (stage === "prep") {
+        clk.textContent = fmt(10 - s);
+        if (s >= 10) { stage = "talk"; t0 = nowS(); beep(); ph.textContent = "Parle"; ph.style.color = "var(--accent)"; btn.textContent = "J'ai fini"; cuts = c.r.cut ? [12 + Math.random() * 6, 28 + Math.random() * 6] : []; stopRec = await maybeRecord(api) }
+      } else {
+        clk.textContent = fmt(45 - s); if (45 - s <= 10) clk.style.color = "var(--off)";
+        if (cuts.length && s >= cuts[0]) { cuts.shift(); const o = pool.pop(); say(o); hint.innerHTML = `<b>« ${esc(o)} »</b>` }
+        if (s >= 45) { beep(); end() }
+      }
+    }, 200);
+    api.onClean(() => { clearInterval(iv); stopRec() });
+    const btn = document.createElement("button"); btn.className = "btn big"; btn.textContent = "Je suis prêt"; body.appendChild(btn);
+    btn.onclick = async () => { if (stage === "prep") { t0 = nowS() - 10 } else end() };
+    return;
+  }
+  // critique
+  if (!oral && X.data) card(body, `<p class="label">Ce que tu as écrit</p><dl class="wrote">${c.r.w.map((w, k) => `<dt>${w}</dt><dd>${X.data[k] ? esc(X.data[k]) : '<span class="muted">vide</span>'}</dd>`).join("")}</dl>`);
+  critique(body, c);
+}
+
+function drillVoix(body, api, c, phase, oral) {
+  if (!oral) {
+    if (phase === "ready" || phase === "go") {
+      const words = c.q.replace(/<b>(.*?)<\/b>/g, (m, x) => x.split(" ").map(w => "\u0001" + w).join(" ")).split(" ");
+      const tx = card(body, `<p class="annot">${words.map((w, k) => `<button class="w" data-k="${k}" data-s="0">${esc(w.replace("\u0001", ""))}</button>`).join(" ")}</p><p class="xs muted legend"><span class="w s1">appuyé</span> <span class="w s2">respiration après</span></p>`);
+      tx.querySelectorAll(".w[data-k]").forEach(b => b.onclick = () => { const s = (+b.dataset.s + 1) % 3; b.dataset.s = s; b.className = "w" + (s ? " s" + s : "") });
+      const b = document.createElement("button"); b.className = "btn big pri"; b.textContent = "J'ai fini"; body.appendChild(b);
+      b.onclick = () => { X.data = { html: tx.querySelector(".annot").innerHTML, bold: words.map(w => w.startsWith("\u0001")) }; renderCard("critique") };
+      return;
+    }
+    card(body, `<p class="label">Ton annotation</p><p class="annot ro">${X.data.html}</p><p class="small muted">Dans le texte d'origine, les mots en gras étaient : ${(c.q.match(/<b>(.*?)<\/b>/g) || []).map(m => "« " + m.replace(/<\/?b>/g, "") + " »").join(", ")}.</p>`);
+    critique(body, c); return;
+  }
+  const m = c.r.m;
+  if (phase === "ready" || phase === "go") {
+    card(body, `<p class="prose read">${c.q}</p>`);
+    const ctl = card(body, `<div class="timer"><span class="clock">0:00</span><button class="btn pri go">Je commence</button></div>${m ? `<p class="small muted">${m === "dur" ? "L'appli chronomètre." : "Le micro mesure pendant que tu lis."}</p>` : ""}`);
+    const go = ctl.querySelector(".go"), clk = ctl.querySelector(".clock");
+    let on = false, t0 = 0, iv = null, fr = [], f = null, stopRec = () => {}, w = null;
+    go.onclick = async () => {
+      if (!on) {
+        if ((m === "zone" || m === "fins") && !(await startMic())) { micHelp(body, () => go.click()); return }
+        on = true; t0 = nowS(); go.textContent = "J'ai fini"; stopRec = await maybeRecord(api);
+        if (m === "zone" && !w) { w = zoneWidget(body); api.onClean(() => w.destroy()) }
+        if (m === "zone" || m === "fins") { f = s => fr.push(s); api.on(f) }
+        iv = setInterval(() => { clk.textContent = fmt(nowS() - t0) }, 250); api.onClean(() => clearInterval(iv));
+        return;
+      }
+      clearInterval(iv); stopRec(); if (f) api.off(f);
+      const dur = nowS() - t0, an = (m === "zone" || m === "fins") ? analyseVoice(fr, timbre(), []) : null;
+      X.data = { dur, an };
+      setTimeout(() => api.alive() && renderCard("critique"), X.rec ? 350 : 0);
+    };
+    return;
+  }
+  // critique avec mesure
+  const d = X.data || {}; let pass = null, txt = "";
+  if (m === "dur") { pass = d.dur >= c.secMin; txt = `Durée : <b>${Math.round(d.dur)} s</b> (objectif : au moins ${c.secMin} s).` }
+  if (m === "zone") { if (d.an) { pass = d.an.zone >= 80; txt = `Dans ta zone : <b>${d.an.zone} %</b> (objectif : 80 %).` } else txt = "Pas assez de voix captée pour mesurer." }
+  if (m === "fins") { if (d.an && d.an.fins != null) { pass = d.an.fins >= 80; txt = `Fins de phrase pleines : <b>${d.an.fins} %</b> (objectif : 80 %).` } else txt = "Pas assez de voix captée pour mesurer." }
+  if (m) card(body, `<p class="label">Mesure</p><p class="result">${txt} ${pass == null ? "" : pass ? '<span class="pass">Réussi</span>' : '<span class="fail">Pas encore</span>'}</p>`, pass ? "ok-tint" : "");
+  critique(body, c, pass);
+}
+
+/* Autocritique : oui ou non à chaque question, puis carte suivante */
+function critique(body, c, measured = null) {
+  if (X.audio) card(body, `<p class="label">Réécoute avant de répondre</p><audio controls src="${X.audio}"></audio>`);
+  const qs = cardChecks(c); const ans = qs.map(() => null);
+  const box = card(body, `<p class="label">Autocritique</p>${qs.map((q, k) => `<div class="yn-row" data-k="${k}"><span>${q}</span><div class="yn2"><button data-v="0">Non</button><button data-v="1">Oui</button></div></div>`).join("")}`);
+  const nx = document.createElement("button"); nx.className = "btn big pri"; nx.disabled = true; nx.textContent = X.i < NCARDS - 1 ? "Carte suivante" : "Voir le résultat"; body.appendChild(nx);
+  box.querySelectorAll(".yn-row").forEach(row => row.querySelectorAll("button").forEach(b => b.onclick = () => {
+    ans[+row.dataset.k] = b.dataset.v === "1"; row.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    nx.disabled = ans.some(a => a === null);
+  }));
+  nx.onclick = () => {
+    const pts = ans.filter(Boolean).length + (measured === true ? 1 : 0), tot = ans.length + (measured == null ? 0 : 1);
+    X.res.push({ f: c.r ? c.r.f : "souffle", pts, tot });
+    X.i++; if (X.i < NCARDS) renderCard("ready"); else drillEnd();
+  };
+}
+
+function drillEnd() {
+  cleanup(); document.body.classList.remove("focus");
+  const pts = X.res.reduce((a, r) => a + r.pts, 0), tot = X.res.reduce((a, r) => a + r.tot, 0), pct = tot ? Math.round(pts / tot * 100) : 0;
+  const prev = (S.x[X.id] || []).slice(-5);
+  S.x[X.id] = (S.x[X.id] || []).concat({ d: today(), pct, mode: X.mode }).slice(-60); save();
+  const avg = prev.length ? Math.round(mean(prev.map(r => r.pct))) : null;
+  const weak = X.res.filter(r => r.pts < r.tot).map(r => r.f).filter((v, k, a) => a.indexOf(v) === k);
+  view.innerHTML = `
+    <section class="hero"><p class="label">Série terminée</p><p class="big-num">${pct} %</p><p class="muted">critères réussis${avg != null ? ` · moyenne précédente ${avg} %` : ""}</p></section>
+    ${weak.length ? `<div><p class="section-label">À revoir</p><div class="group">${weak.map(f => cellLink("f/" + f, esc(ficheTitle(f)), "Relire la fiche")).join("")}</div></div>` : `<div class="card"><p class="prose">Tous les critères sont réussis. La prochaine fois, essaie sans préparation.</p></div>`}
+    <div class="pair"><button class="btn big" data-href="${X.id}">Terminer</button><button class="btn big pri" id="xAgain">Une autre série</button></div>`;
+  bindLinks(); $("#xAgain").onclick = () => startDrill(X.id);
+}
+
 /* ============ Navigation ============ */
 function bindLinks() { $$("#view [data-href]").forEach(b => b.onclick = () => { location.hash = b.dataset.href }) }
 function route() {
-  cleanup();
-  const h = location.hash.slice(1), [a, b, c] = h.split("/");
-  const tabId = THEMES.some(T => T.id === a) ? a : a === "mots" || a === "reviser" || a === "ajouter" || a === "paquet" ? "mots" : a === "f" ? (findFiche(b) || { T: { id: "fond" } }).T.id : "fond";
+  cleanup(); document.body.classList.remove("focus");
+  const h = location.hash.slice(1), [a, b, c, d] = h.split("/");
+  if (a === "hasard") { location.replace("#f/" + randomFiche() + "/comprendre/h"); return }
+  const rnd = a === "f" && d === "h";
+  const tabId = rnd ? "hasard" : THEMES.some(T => T.id === a) ? a : ["mots", "reviser", "ajouter", "paquet"].includes(a) ? "mots" : a === "f" ? (findFiche(b) || { T: { id: "discours" } }).T.id : a === "ex" ? b : "discours";
   $$(".tab").forEach(t => t.setAttribute("aria-current", t.dataset.go === tabId ? "page" : "false"));
   const T = THEMES.find(T => T.id === a);
-  if (a === "f") renderFiche(b, c);
+  if (a === "f") renderFiche(b, c, rnd);
+  else if (a === "ex" && DRILLS[b]) renderDrillStart(b);
   else if (a === "mots") renderMots();
   else if (a === "ajouter") renderAdd(b);
   else if (a === "paquet") renderPaquet();
   else if (a === "reviser") startReview();
   else renderTheme(T || THEMES[0]);
-  if (a !== "f" || !c) window.scrollTo({ top: 0 });
+  if (a !== "f" || !c || (rnd && c === "comprendre")) window.scrollTo({ top: 0 });
   bindLinks();
 }
 $$(".tab").forEach(b => b.onclick = () => { location.hash = b.dataset.go });
