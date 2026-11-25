@@ -1,120 +1,4 @@
-/* Contenu pédagogique : réflexes de structure, mini-cours, sujets, chant (facultatif). */
-
-/* Les réflexes de structure, du plus simple au plus complet.
-   Chaque réflexe : t, why, x (explication), rule (la règle), missions (à appliquer dans la journée), checks (réécoute), fields (écriture), topics (sujets). */
-window.REFLEXES = [
-  { t: "La destination", n: 3, topics: "QUICK",
-    why: "C'est ce qui t'évite de chercher en parlant. Tant que tu sais où tu vas, tu ne te perds pas.",
-    x: "Avant de parler, demande-toi : quelle est ma dernière phrase ? Ce que je veux que l'autre retienne, ou décide. Deux secondes suffisent. Puis tu dis cette destination tout de suite, au début, et le reste ne sert qu'à y mener. On se perd quand on découvre sa conclusion en parlant. Avec une destination, chaque phrase a une direction.",
-    rule: "Deux secondes de silence. Je décide de ma dernière phrase. Je la dis en premier.",
-    missions: [
-      "Quand on me pose une question, je laisse deux secondes et je décide de ma dernière phrase avant de répondre.",
-      "Quand j'écris un message ou un mail, la première ligne est ma conclusion.",
-      "Avant chaque réunion, j'écris sur un papier la phrase que je veux que les autres retiennent.",
-      "Quand je raconte quelque chose, je commence par la fin : « Il s'est passé un truc drôle : … »",
-      "Après une conversation importante, je me demande : quelle était ma destination ? L'ai-je dite ?",
-      "Avant de montrer un visuel, je dis ce que j'attends de l'autre : un avis, une validation, une décision."
-    ],
-    checks: ["J'ai dit ma destination dans les 10 premières secondes"],
-    fields: ["Ma destination : ma dernière phrase"] },
-
-  { t: "Le nombre annoncé", n: 3, topics: "AVIS",
-    why: "Annoncer « deux choses » t'oblige à trier tes idées, et donne une carte à ton interlocuteur.",
-    x: "Après ta destination, annonce combien de points tu vas donner : « Pour deux raisons. », « Trois choix. ». Ton cerveau cherche alors exactement ce nombre, et arrête de partir dans tous les sens. Ton interlocuteur sait où il en est, et ne te coupe pas pour reprendre la main. Deux ou trois, jamais plus. Tu peux même annoncer « deux » avant de connaître le second : il arrive pendant que tu développes le premier.",
-    rule: "Destination, puis « Il y a deux raisons. La première… La deuxième… »",
-    missions: [
-      "Quand je donne mon avis, j'annonce le nombre de raisons : « Pour deux raisons. »",
-      "Quand j'explique un choix graphique, je dis « Trois choix », puis « premier, deuxième, troisième ».",
-      "En réunion, j'observe les autres : qui annonce le nombre de ses points ? Comment ça se passe ?",
-      "Quand je fais un retour sur un travail, je le structure : « Deux choses qui marchent, une à revoir. »",
-      "Ce soir, j'explique mon projet en cours à quelqu'un en deux points, pas plus.",
-      "Avant d'écrire un message, je numérote mes idées."
-    ],
-    checks: ["J'ai annoncé le nombre de points et je l'ai respecté"],
-    fields: ["Ma destination", "Point 1", "Point 2"] },
-
-  { t: "Finir sa phrase", n: 3, topics: "AVIS",
-    why: "Les reprises (« enfin, je veux dire… ») brouillent ton message et donnent une impression d'hésitation. Ce sont elles qui te font perdre le fil.",
-    x: "Quand tu te reprends, tu recommences une phrase avant d'avoir fini la première. L'autre doit garder les deux versions en tête, et toi aussi. La règle : une phrase commencée se termine, même imparfaite. Puis point. Si elle n'était pas parfaite, la suivante précise. Les phrases courtes rendent ça facile : sujet, verbe, complément, stop. À l'oral, une phrase courte n'est jamais trop simple.",
-    rule: "Je finis ma phrase. Point. La suivante précise, si besoin.",
-    missions: [
-      "Dans une conversation, je repère chaque « enfin, je veux dire » et je finis plutôt ma phrase.",
-      "Quand j'explique quelque chose, je fais des phrases de moins de 15 mots.",
-      "Quand je sens que je vais me reprendre, je finis ma phrase, je marque une pause, puis je précise.",
-      "J'enregistre un message vocal d'une minute et je compte mes reprises.",
-      "Quand je présente un visuel : une phrase par élément. « La typo est ronde. Elle rend la marque accessible. »",
-      "Je remplace « et… et… et… » par des points : une idée, une phrase."
-    ],
-    checks: ["Je n'ai presque pas recommencé de phrase", "Mes phrases étaient courtes"],
-    fields: ["Ma destination", "Point 1", "Point 2"] },
-
-  { t: "Les mots-clés", n: 3, topics: "PROJETS",
-    why: "C'est ce que l'autre retiendra. Les choisir à l'avance te donne des repères pendant que tu parles.",
-    x: "Pour chaque idée, choisis un à trois mots qui la résument : « lisible », « chaleureux », « premium ». Ce sont tes balises : pendant que tu parles, tu vas d'un mot-clé au suivant, comme on suit des repères sur un chemin. Appuie-les avec la voix : ralentis légèrement, fais une micro-pause juste avant. Et répète-les. À l'oral, la répétition n'est pas une faute : c'est ce qui fait retenir.",
-    rule: "Trois mots-clés choisis avant. Je les appuie et je les répète.",
-    missions: [
-      "Avant une réunion, je choisis trois mots-clés pour mon intervention et je les place.",
-      "Quand je présente un projet, je répète le mot de l'intention au moins trois fois.",
-      "Quand quelqu'un présente, je note ses mots-clés : sont-ils clairs ? En a-t-il ?",
-      "Je décris une affiche ou un site croisé dans la journée en trois mots-clés.",
-      "Dans un message, je place le mot le plus important au début de la phrase.",
-      "Quand je donne un retour, je résume chaque remarque en un mot avant de l'expliquer."
-    ],
-    checks: ["J'ai appuyé et répété mes mots-clés"],
-    fields: ["Ma destination", "Point 1", "Point 2", "Mes 3 mots-clés"] },
-
-  { t: "Boucler", n: 3, topics: "PROJETS",
-    why: "La fin est ce qu'on retient le mieux. Boucler sur ta destination donne une impression de clarté et de maîtrise.",
-    x: "Beaucoup d'interventions s'éteignent : « …voilà, enfin, je sais pas. » Ta dernière phrase doit être ta destination, redite : « Donc je te propose de garder la piste B. » Puis tu t'arrêtes et tu laisses le silence. C'est le signal que tu as fini, et c'est souvent le moment où l'autre acquiesce. Pas de « voilà », pas de « bref » : ta destination, puis silence.",
-    rule: "Je termine par « Donc… » et ma destination. Puis silence.",
-    missions: [
-      "Je termine chaque intervention en réunion par « Donc… » et ma conclusion.",
-      "Je supprime « voilà » à la fin de mes phrases : je m'arrête et je laisse le silence.",
-      "Quand je présente un projet, je finis par la décision que j'attends : « J'ai besoin de ta validation sur… »",
-      "Je termine mes messages par une phrase de conclusion claire.",
-      "Après avoir conclu, je compte deux secondes avant de reprendre la parole.",
-      "Quand j'explique quelque chose, je finis par « En résumé : » et une seule phrase."
-    ],
-    checks: ["J'ai fini par ma destination, sans « voilà »"],
-    fields: ["Ma destination", "Point 1", "Point 2", "Mes 3 mots-clés"] },
-
-  { t: "Intention, choix, effet", n: 4, topics: "PROJETS",
-    why: "C'est la structure du directeur artistique. Elle rend tes présentations lisibles et tes choix défendables.",
-    x: "Pour présenter un travail créatif, trois temps. L'intention : ce qu'on veut faire ressentir ou obtenir. Les choix : deux ou trois décisions concrètes (typo, couleur, image, composition). L'effet : ce que ça produit, comparé à avant. « L'intention : rendre la marque plus chaleureuse. Trois choix : une typo ronde, une palette terre, des photos en lumière naturelle. L'effet : on passe d'une image froide à une image proche. » Chaque choix est relié à l'intention : c'est ce qui le rend défendable face à une objection.",
-    rule: "Intention, puis deux ou trois choix, puis l'effet. Chaque choix sert l'intention.",
-    missions: [
-      "Quand je présente un visuel, je dis l'intention avant de le montrer.",
-      "Je décris un projet que j'admire avec intention, choix, effet.",
-      "Quand on critique un de mes choix, je le relie à l'intention : « Ce choix sert… »",
-      "Je briefe un graphiste ou un prestataire en commençant par l'intention, pas par les détails.",
-      "Devant une campagne de pub dans la rue, je devine son intention et ses trois choix.",
-      "Avant de montrer une maquette à l'équipe, je l'écris en trois lignes : intention, choix, effet."
-    ],
-    checks: ["J'ai suivi intention, choix, effet", "Chaque choix était relié à l'intention"],
-    fields: ["Intention", "Choix 1", "Choix 2", "Choix 3", "Effet", "Mots-clés"] },
-
-  { t: "Tout assembler", n: 9999, topics: "TOUT",
-    why: "Les réflexes deviennent automatiques à force de répétition.",
-    x: "Destination, nombre annoncé, phrases finies, mots-clés, bouclage, et pour un travail créatif : intention, choix, effet. Chaque exercice les mobilise tous. Choisis un seul point à corriger par prise : c'est comme ça qu'on progresse le plus vite. Et avant une vraie présentation, utilise l'onglet Préparer.",
-    rule: "Destination, nombre, phrases finies, mots-clés, boucle.",
-    missions: [
-      "Quand on me pose une question, deux secondes, puis ma dernière phrase en premier.",
-      "Je termine chaque intervention par « Donc… » et ma conclusion.",
-      "Quand je présente un visuel, je dis l'intention avant de le montrer.",
-      "Je repère mes reprises dans une conversation et je finis mes phrases.",
-      "Avant une réunion, j'écris ma destination et trois mots-clés.",
-      "Ce soir, je résume ma journée en trois phrases à voix haute."
-    ],
-    checks: [],
-    fields: ["Ma destination", "Point 1", "Point 2", "Mots-clés"] }
-];
-
-window.MINICOURS = {
-  topics: ["La hiérarchie typographique", "Choisir une palette de couleurs", "Le contraste en design", "Qu'est-ce qu'une identité visuelle ?", "La grille de mise en page", "Le rôle du blanc dans une page", "Comment briefer un photographe", "Un logo doit-il être simple ?", "Ce qui rend une affiche lisible de loin", "À quoi sert une charte graphique ?", "Associer deux typographies", "Présenter un projet à un client"],
-  how: "Un bon mini-cours : une destination (ce que l'élève saura faire à la fin), trois points, un exemple concret, une boucle. Trois minutes. Enseigner oblige à structurer plus que tout le reste : c'est le meilleur entraînement pour clarifier ta pensée.",
-  fields: ["Destination : à la fin, tu sauras…", "Point 1", "Point 2", "Point 3", "Un exemple concret", "Mots-clés"],
-  checks: ["Destination annoncée au début", "Trois points annoncés et suivis", "Un exemple concret", "Bouclé sur la destination", "Un débutant aurait compris"]
-};
+/* Contenu de l'appli : fiches, sujets d'entraînement, vocabulaire. */
 
 window.LISTS = {
   AVIS: ["Quel est le meilleur site web que tu connaisses, et pourquoi ?", "Faut-il montrer une ou plusieurs pistes au client ?", "Pourquoi un bon brief change tout ?", "Ton outil de travail indispensable, et pourquoi", "Qu'est-ce qui fait une bonne affiche ?", "Faut-il suivre les tendances en design ?", "Ce que tu changerais dans l'identité visuelle de ta ville", "Comment choisis-tu une typographie ?", "L'IA va-t-elle changer le métier de directeur artistique ?", "Quel est le rôle d'un directeur artistique ?"],
@@ -124,189 +8,289 @@ window.LISTS = {
   DOUTES: ["Le client demande si le site sera prêt vendredi. Tu n'en es pas sûr.", "On te demande si la police choisie est libre de droits. Tu dois vérifier.", "Ton équipe te demande quelle piste graphique garder. Tu hésites entre deux.", "On te demande ton avis sur une maquette qui n'est pas finie.", "Le client veut savoir si la charte fonctionnera sur les réseaux sociaux. Tu n'as pas encore testé.", "Ton responsable demande combien de temps prendra la refonte. Tu n'as pas tous les éléments."],
   OBJ: ["Je trouve ça un peu trop sobre.", "Pourquoi ce choix de couleur ?", "On avait demandé quelque chose de plus moderne.", "Ça va prendre combien de temps ?", "Mon associé n'aime pas le logo.", "Tu es sûr que c'est lisible ?", "On ne peut pas juste agrandir le logo ?", "C'est trop cher.", "Va à l'essentiel, on n'a pas le temps.", "Je ne vois pas où tu veux en venir.", "Quelle est ta recommandation, au final ?", "Et si on faisait l'inverse ?"],
   DIGRESSIONS: ["Au fait, tu as vu le mail de ce matin ?", "Et le budget, on en est où ?", "Ça me fait penser à un autre projet, tu te souviens ?", "Attends, tu peux revenir sur le début ?", "C'est qui, le développeur sur ce projet ?", "Et pour la version anglaise ?"],
-  CONTRA: ["Je ne suis pas du tout d'accord.", "Tu as un exemple concret ?", "Ce n'est pas ce que disent les chiffres.", "Ça marche peut-être pour toi, mais pas en général.", "Tu ne réponds pas à la question.", "Et quel est l'inconvénient de ta position ?"]
+  CONTRA: ["Je ne suis pas du tout d'accord.", "Tu as un exemple concret ?", "Ce n'est pas ce que disent les chiffres.", "Ça marche peut-être pour toi, mais pas en général.", "Tu ne réponds pas à la question.", "Et quel est l'inconvénient de ta position ?"],
+  MINICOURS: ["La hiérarchie typographique", "Choisir une palette de couleurs", "Le contraste en design", "Qu'est-ce qu'une identité visuelle ?", "La grille de mise en page", "Le rôle du blanc dans une page", "Comment briefer un photographe", "Un logo doit-il être simple ?", "Ce qui rend une affiche lisible de loin", "À quoi sert une charte graphique ?", "Associer deux typographies", "Présenter un projet à un client"]
 };
-
-window.LISTS.TOUT = [].concat(window.LISTS.QUICK, window.LISTS.AVIS, window.LISTS.PROJETS);
-
-window.CHANT = [
-  { t: "Le souffle", n: 3,
-    why: "Toute la voix repose sur l'air. Un souffle stable donne une note stable, une voix qui ne tremble pas, et la liberté de jouer avec le volume.",
-    x: "Quand tu chantes, l'air doit sortir de façon régulière, comme d'un robinet bien réglé. Ce n'est pas une question de quantité d'air, mais de contrôle. À l'inspiration, le ventre et les côtes basses s'ouvrent. À l'expiration, tu freines la sortie de l'air en gardant les côtes ouvertes le plus longtemps possible. C'est ce que les chanteurs appellent l'appui. Sans lui, la gorge compense en serrant.",
-    ok: "Ton « sss » dépasse 20 secondes sans à-coups, et ta note tenue reste dans la zone verte du début à la fin.",
-    deep: ["Pose les mains sur les côtes basses : elles s'écartent à l'inspiration et restent ouvertes au début de l'expiration.", "Ne gonfle pas la poitrine, ne lève pas les épaules.", "Si la note baisse en fin de souffle, l'appui lâche : arrête-toi avant d'être à bout d'air."],
-    ex: [
-      { k: "breath" },
-      { k: "stable", t: "Note tenue, 8 secondes", how: "Sur « a », volume moyen. Garde la note immobile jusqu'au bout, surtout à la fin.", rel: [0, 2], sec: 8, tol: 20 },
-      { k: "stable", t: "Note tenue, 10 secondes", how: "Même exercice, plus long. Respire profondément avant chaque note.", rel: [-1, 3], sec: 10, tol: 20 }
-    ] },
-
-  { t: "L'attaque", n: 3,
-    why: "Le début de chaque note décide de sa qualité. Une attaque propre rend la voix nette et précise, et protège les cordes vocales.",
-    x: "Il y a trois façons de démarrer un son. L'attaque dure : les cordes vocales sont serrées puis lâchent d'un coup, on entend un petit choc. L'attaque soufflée : l'air passe avant le son, comme un « h ». L'attaque équilibrée : l'air et la vibration commencent ensemble. C'est elle qu'on cherche : un son qui naît net, sans choc ni souffle, directement sur la bonne note.",
-    ok: "Tes attaques arrivent sur la note en moins de 150 millisecondes, sans glisser depuis le dessous.",
-    deep: ["Pour sentir la différence : fais exprès un choc (« ʔa »), puis un souffle (« ha »), puis cherche le milieu.", "Imagine que le son commence comme un soupir très léger, sans air audible.", "Entends la note dans ta tête avant d'ouvrir la bouche : la précision vient de là."],
-    ex: [
-      { k: "onset", t: "Attaques sur « a »", how: "Écoute la note, puis chante 5 « a » courts (une seconde chacun) séparés par un silence. Vise la note directement.", rel: 0, n: 5 },
-      { k: "onset", t: "Attaques plus haut", how: "Même exercice, plus haut. L'attaque doit rester douce et précise.", rel: 4, n: 5 }
-    ] },
-
-  { t: "Les registres", n: 3,
-    why: "Ta voix a deux mécanismes principaux. Les maîtriser donne accès à toute ta tessiture sans cassure ni forçage.",
-    x: "Dans le grave, les cordes vocales vibrent épaisses : c'est la voix de poitrine, pleine, proche de la voix parlée. Dans l'aigu, elles s'affinent : c'est la voix de tête, plus légère. Entre les deux, il y a le passage, la zone où la voix a tendance à casser ou à forcer. Le travail consiste à rendre ce passage progressif, en allégeant la voix en montant au lieu de pousser.",
-    ok: "Ta sirène monte et descend sans saut visible sur la courbe.",
-    deep: ["Les sons « ng » (comme dans parking), « ou » et les trilles de lèvres facilitent le passage : ils réduisent la pression sur les cordes.", "Travaille toujours le passage à volume faible. Le volume viendra ensuite.", "Une cassure n'est pas un échec : c'est l'information qui te dit où travailler."],
-    ex: [
-      { k: "siren", t: "Sirène et passage", how: "Sur « ou » ou en trilles de lèvres, glisse lentement du grave à l'aigu, puis redescends. Plusieurs fois. L'appli repère où ta voix saute.", sec: 60 },
-      { k: "seq", t: "Gamme autour du passage", how: "Sur « ng » puis « mum », volume faible. Allège en montant.", rel: [0, 2, 4, 5, 7, 5, 4, 2, 0], base: "passage" }
-    ] },
-
-  { t: "La résonance", n: 3,
-    why: "La même note peut sonner sombre, claire, chaude ou perçante. C'est la forme de ta bouche et de ta gorge qui choisit la couleur : c'est ce qui donne à la voix sa portée et son émotion.",
-    x: "Les cordes vocales produisent un son brut. La gorge, la bouche et le nez le filtrent, comme la caisse d'une guitare transforme le son d'une corde. Changer de voyelle, ouvrir la gorge, sourire ou avancer le son modifient ce filtre, sans changer la note. Le « twang », un son légèrement nasillard comme un canard (« nyé nyé »), concentre l'énergie : la voix porte loin sans effort.",
-    ok: "Tu changes de voyelle sur une même note sans que la note bouge sur la courbe.",
-    deep: ["Passe de « i » à « ou » : la langue et les lèvres bougent, la note reste.", "Pour un son plus sombre, imagine le début d'un bâillement. Pour un son plus clair, un léger sourire.", "Le twang s'entend mais ne doit jamais faire mal : c'est un rétrécissement au-dessus des cordes, pas un serrage de la gorge."],
-    ex: [
-      { k: "stable", t: "Voyelles sur une note", how: "Tiens la note et change de voyelle quand l'écran te le dit. La note ne doit pas bouger.", rel: [0, 3], sec: 10, tol: 25, cue: "vowels" },
-      { k: "timer", t: "Le twang", how: "Fais « nyé nyé nyé » comme un canard moqueur, sur quelques notes. Puis chante une phrase de ton choix en gardant un peu de ce son : elle doit porter plus, sans effort.", sec: 120 }
-    ] },
-
-  { t: "Les nuances", n: 3,
-    why: "Chanter fort ou doucement sur demande est la base de l'expression. Le piège : en changeant de volume, la note change aussi.",
-    x: "En chantant plus fort, on a tendance à monter et à serrer. En chantant doucement, on a tendance à baisser et à souffler. L'exercice classique, la messa di voce, consiste à tenir une note en partant très doucement, en gonflant jusqu'à fort, puis en revenant à très doux, sans que la note bouge. Le volume vient du souffle, pas de la gorge.",
-    ok: "Ton volume varie d'au moins 15 dB pendant que la note reste dans la zone verte.",
-    deep: ["Commence encore plus doucement que tu ne le crois : le plus dur est le très doux.", "Pour monter en volume, augmente le débit d'air depuis le ventre, garde la gorge identique.", "Le retour au très doux est la partie la plus difficile : c'est elle qui montre le contrôle."],
-    ex: [
-      { k: "stable", t: "Messa di voce", how: "Une note, 10 secondes : très doux, puis fort, puis très doux. Suis les indications à l'écran.", rel: [0, 2], sec: 10, tol: 25, cue: "messa", dyn: true }
-    ] },
-
-  { t: "L'agilité", n: 3,
-    why: "Passer vite et juste d'une note à l'autre rend la voix souple et précise. Ton oreille est déjà bonne : il s'agit maintenant d'aller plus vite.",
-    x: "La mélodie est jouée une fois, puis tu la chantes d'une traite, sans attendre chaque note. Garde le même souffle continu sous toutes les notes, comme une seule ligne, au lieu de relancer chaque note. Plus c'est rapide, plus le son doit être léger.",
-    ok: "Tu enchaînes le motif d'une traite avec au moins 80 % de notes justes.",
-    deep: ["Commence sur « i » ou « a » léger, jamais en force.", "Si une note rate, ne t'arrête pas : continue la ligne, c'est le réflexe à construire.", "Entends tout le motif dans ta tête avant de commencer."],
-    ex: [
-      { k: "seq", t: "Gamme rapide", how: "Écoute, puis chante d'une traite.", rel: [0, 2, 4, 5, 7, 5, 4, 2, 0], base: -3, chain: true },
-      { k: "seq", t: "Arpège rapide", how: "Écoute, puis chante d'une traite.", rel: [0, 4, 7, 12, 7, 4, 0], base: -6, chain: true },
-      { k: "seq", t: "Tierces", how: "Do-mi, ré-fa, mi-sol… Écoute, puis chante d'une traite.", rel: [0, 4, 2, 5, 4, 7, 5, 9, 7], base: -4, chain: true }
-    ] },
-
-  { t: "L'émotion", n: 3,
-    why: "C'est ce que tu cherches dans le chant : faire passer quelque chose. L'émotion n'a rien de magique : elle passe par ce que tu as travaillé, le souffle, l'attaque, la couleur et le volume.",
-    x: "Une voix triste est souvent plus soufflée, plus sombre, plus lente, avec des attaques douces. Une voix joyeuse est plus claire et brillante, avec des attaques nettes. Une voix décidée a un appui fort et des fins de phrase stables. La tendresse allège et adoucit. En chantant la même phrase avec quatre intentions, tu découvres comment ton corps traduit chaque émotion, et tu apprends à la produire volontairement.",
-    ok: "À la réécoute, quelqu'un qui ne connaît pas l'intention pourrait la deviner.",
-    deep: ["Pense à une situation réelle avant chaque prise : le corps suit l'image.", "Change un seul paramètre à la fois au début : le souffle, puis la couleur, puis le tempo.", "Les grands interprètes exagèrent en répétition, puis dosent en concert."],
-    ex: [{ k: "emotion" }] },
-
-  { t: "Ta voix parlée", n: 9999,
-    why: "Tout ce que tu as travaillé sert aussi quand tu parles : une voix posée, qui porte et qui varie inspire confiance.",
-    x: "Sous stress, la voix parlée monte, se serre et devient plate. Pour trouver ta hauteur naturelle, dis « mm-hmm » comme pour approuver : la note qui sort est proche de ta zone de confort. Parler autour de cette note, avec le souffle et la résonance travaillés en chant, rend la voix posée sans la forcer vers le grave.",
-    ok: "Ta voix parlée reste autour de ta zone de confort et varie de 3 à 5 demi-tons.",
-    deep: ["Avant une réunion : trois « mm-hmm » et une expiration longue.", "Si tu sens ta voix monter, ralentis et respire : elle redescend toute seule.", "La portée vient du twang et du souffle, pas du volume de la gorge."],
-    ex: [
-      { k: "speech", t: "Ta hauteur parlée", how: "Lis le texte à voix haute, naturellement, comme en réunion. L'appli mesure où se place ta voix et combien elle varie." },
-      { k: "proj", t: "Projeter sa voix", how: "Dis « Bonjour à tous, merci d'être là » comme si la personne était à 1 mètre, puis 5 mètres, puis 15 mètres. Augmente le souffle, pas la gorge." }
-    ] }
-];
-
-window.SPEECH_TEXT = "Bonjour à tous. Je vais vous présenter la nouvelle identité visuelle en trois points. D'abord, le constat : l'ancienne image ne parlait plus à nos clients. Ensuite, la proposition : une palette plus claire et une typographie plus lisible. Enfin, la suite : les premiers supports seront prêts dans trois semaines. Ma recommandation est simple : lancer la nouvelle identité dès le mois prochain.";
-window.EMO_PHRASE = [0, 0, 0, 2, 4, 2, 0, 4, 2, 2, 0];
-
-/* ============ Coach vocal · Parler : trouver et garder son timbre naturel ============ */
-window.PARLER = [
-  { t: "Ta note naturelle", n: 2,
-    why: "Ta voix a une hauteur où elle sonne pleine sans effort : c'est ta note naturelle. La plupart des gens parlent un peu au-dessus, surtout sous stress, ou poussent vers le grave pour paraître sérieux. Les deux fatiguent et sonnent faux.",
-    x: "Quand tu approuves quelqu'un sans réfléchir, « mm-hmm », la note qui sort est celle de ta voix au repos. Même chose quand tu comptes sur un soupir détendu, comme affalé dans un canapé. L'appli écoute ces sons, en tire ta note naturelle, puis te montre pendant que tu lis si ta voix reste autour. Ta zone, c'est cette note plus ou moins 3 demi-tons : à l'intérieur, la voix peut monter et descendre librement.",
-    ok: "Ta note naturelle est mesurée, et ta voix de lecture passe plus de 70 % du temps dans ta zone.",
-    deep: ["Refais la mesure le matin et le soir : la voix est souvent plus grave le matin. Garde la mesure faite en milieu de journée.", "Ta note naturelle n'est pas « la plus grave possible ». Une voix forcée vers le bas s'écrase et porte moins.", "Les lèvres fermées pendant le « mm-hmm » doivent vibrer légèrement : c'est le signe que la voix est bien placée."],
-    ex: [
-      { k: "find" },
-      { k: "voice", t: "Lire dans ta zone", how: "Lis le texte à voix haute, comme en réunion. Regarde la courbe de temps en temps : la bande verte, c'est ta zone.", mode: "read" }
-    ] },
-
-  { t: "Le souffle bas", n: 3,
-    why: "Ton timbre repose sur l'air. Quand le souffle est haut et court, la gorge compense en serrant : la voix monte, se durcit, et s'éteint en fin de phrase.",
-    x: "Inspire par le nez en laissant le ventre et les côtes basses s'ouvrir, les épaules immobiles. En parlant, laisse l'air sortir de façon régulière et reprends ton souffle à chaque point, sans attendre d'être vide. Une phrase, un souffle. C'est aussi ce qui crée tes pauses : la respiration et la ponctuation travaillent ensemble.",
-    ok: "Ton « sss » dépasse 20 secondes, et tu comptes jusqu'à 15 sur un souffle sans que la voix monte ni s'éteigne.",
-    deep: ["Main sur le ventre, main sur la poitrine : seule celle du ventre bouge à l'inspiration.", "Respirer à chaque point ralentit ton débit sans que tu y penses, et donne du poids à ce que tu dis.", "Si tu manques d'air en réunion, ce n'est pas un manque de capacité : tu as oublié de reprendre ton souffle aux points."],
-    ex: [
-      { k: "breath" },
-      { k: "timer", t: "Compter sur un souffle", how: "Inspire bas, puis compte à voix normale « un, deux, trois… » sur un seul souffle, sans forcer. Arrête-toi avant d'être vide. Trois fois. La voix doit garder la même hauteur et le même volume du premier au dernier chiffre.", sec: 90 },
-      { k: "voice", t: "Une phrase, un souffle", how: "Lis le texte en reprenant ton souffle à chaque point. Prends ton temps : le silence fait partie du texte.", mode: "read", goal: "fins" }
-    ] },
-
-  { t: "Détendre l'instrument", n: 3,
-    why: "Le timbre naturel, c'est la voix quand rien ne la gêne. Mâchoire serrée, langue crispée, gorge tendue : le stress s'installe dans ces muscles, et la voix devient plus aiguë et plus mince.",
-    x: "On relâche les muscles qui entourent la voix, puis on parle tout de suite après, pour que la voix garde cette détente. Les exercices à bouche semi-fermée, comme les trilles de lèvres ou parler dans une paille, équilibrent la pression d'air : la voix vibre sans effort, et ce réglage se transmet ensuite à la parole.",
-    ok: "Après l'échauffement, ta voix de lecture est plus proche de ta note naturelle qu'avant.",
-    deep: ["Le bâillement ouvre la gorge, le soupir relâche les cordes vocales : combine les deux, puis enchaîne une phrase sur la même détente.", "Masse les muscles de la mâchoire, devant les oreilles, en ouvrant doucement la bouche.", "Une paille dans un verre d'eau, et tu fais des bulles en faisant « ou » : c'est l'exercice préféré des orthophonistes."],
-    ex: [
-      { k: "timer", t: "Relâcher mâchoire et langue", how: "Masse la mâchoire devant les oreilles 20 secondes. Laisse tomber la mâchoire, langue posée derrière les dents du bas. Puis sors la langue et dis « la la la » lentement. Termine par trois soupirs sonores du haut vers le bas.", sec: 90 },
-      { k: "timer", t: "Trilles de lèvres, puis parler", how: "Fais vibrer les lèvres (« brrr ») en glissant doucement sur quelques notes, 30 secondes. Puis enchaîne directement : « brrr… bonjour, je m'appelle… ». Garde la même facilité dans la phrase. Recommence trois fois.", sec: 90 },
-      { k: "voice", t: "Lire sur la détente", how: "Juste après l'échauffement, lis le texte. Compare avec ta mesure habituelle.", mode: "read" }
-    ] },
-
-  { t: "La résonance", n: 3,
-    why: "Une voix qui porte sans forcer vibre dans le visage, à l'avant : lèvres, nez, pommettes. C'est ce qui donne de la présence, même à volume moyen.",
-    x: "Fais « mmm » sur ta note naturelle, lèvres fermées, dents desserrées. Tu dois sentir les lèvres et le nez chatouiller. Puis ouvre sur une syllabe en gardant cette vibration à l'avant : « mmm-mon », « mmm-mais », « mmm-mien ». Ensuite une phrase entière. C'est la base de la thérapie par voix résonante, utilisée par les orthophonistes : beaucoup de son pour peu d'effort.",
-    ok: "Tu sens la vibration dans les lèvres en parlant, et ta voix porte à 5 mètres sans que ta gorge pousse.",
-    deep: ["Si la vibration est dans la gorge, avance le son : imagine qu'il sort par le bout du nez.", "Résonance ne veut pas dire voix nasale. Pince le nez sur une phrase sans « m » ni « n » : elle ne doit pas changer.", "Plus la résonance est à l'avant, moins tu as besoin de volume."],
-    ex: [
-      { k: "timer", t: "Du « mmm » aux mots", how: "« mmm » sur ta note naturelle, 5 secondes. Puis « mmm-mon, mmm-mais, mmm-mien, mmm-moi ». Puis « mon mari mange des marrons ». Puis « mardi, Marie m'a montré la maquette ». Garde la vibration dans les lèvres du début à la fin.", sec: 120 },
-      { k: "voice", t: "Lire avec la vibration", how: "Commence par un « mmm » sur ta note, puis lis le texte en gardant la vibration à l'avant.", mode: "read" },
-      { k: "proj", t: "Porter sans pousser", how: "Dis « Bonjour à tous, merci d'être là » pour quelqu'un à 1 mètre, puis 5 mètres, puis 15 mètres. Le son doit grossir par l'avant et le souffle, jamais par la gorge." }
-    ] },
-
-  { t: "Jusqu'au bout de la phrase", n: 3,
-    why: "C'est ce qui fait la différence entre une voix assurée et une voix qui doute : la fin de phrase. Si elle s'éteint ou s'écrase, le message perd sa force, même avec de bonnes idées.",
-    x: "En fin de phrase, on manque d'air ou on relâche l'attention : la voix descend dans un grésillement, ou on avale les derniers mots. En français, une affirmation descend naturellement à la fin : c'est bien. Mais elle doit descendre sur une voix pleine, jusqu'au dernier mot, puis s'arrêter net. L'appli repère les fins de phrase qui s'éteignent.",
-    ok: "Au moins 80 % de tes fins de phrase restent pleines jusqu'au dernier mot.",
-    deep: ["Pense le dernier mot comme le plus important : souvent, c'est vrai.", "Reprends de l'air avant la fin de ton souffle, pas après.", "Une fin qui monte transforme une affirmation en question. Garde-la descendante quand tu affirmes."],
-    ex: [
-      { k: "voice", t: "Des fins pleines", how: "Lis le texte. Appuie légèrement le dernier mot de chaque phrase, puis silence.", mode: "read", goal: "fins" },
-      { k: "voice", t: "En improvisant", how: "Réponds à la question à voix haute pendant une minute. Phrases courtes, fins pleines.", mode: "free", goal: "fins" }
-    ] },
-
-  { t: "La mélodie", n: 3,
-    why: "Une voix naturelle n'est pas plate : elle monte et descend pour souligner le sens. Le stress l'aplatit, et une voix monotone fait décrocher l'auditoire, même quand le fond est bon.",
-    x: "La mélodie se joue autour de ta note naturelle, pas au-dessus. Pour souligner un mot-clé, tu as trois outils : monter un peu sur lui, le dire plus lentement, ou faire une courte pause juste avant. Une variation de 3 à 5 demi-tons suffit pour une voix vivante. Au-delà, ça devient théâtral.",
-    ok: "Ta voix varie de 2,5 à 5 demi-tons en restant dans ta zone.",
-    deep: ["Une pause avant un mot-clé est souvent plus efficace qu'une montée.", "Lis une phrase comme un journaliste, puis comme si tu racontais une histoire à un ami : sens la différence.", "La mélodie suit l'intention. Si tu sais pourquoi tu dis la phrase, elle trouve sa forme."],
-    ex: [
-      { k: "voice", t: "Faire vivre les mots-clés", how: "Lis le texte en faisant ressortir les mots en gras : un peu plus haut, un peu plus lent, ou après une courte pause.", mode: "read", text: 1, goal: "var" },
-      { k: "voice", t: "Raconter", how: "Réponds à la question à voix haute pendant une minute, comme si tu le racontais à un ami. Laisse la voix bouger.", mode: "free", goal: "var" }
-    ] },
-
-  { t: "Sous pression", n: 3,
-    why: "C'est là que tout se joue : en réunion, devant un client, quand on te coupe. Sous stress, la voix monte de 2 à 4 demi-tons sans que tu t'en rendes compte. Ton timbre ne vaut que si tu le gardes à ce moment-là.",
-    x: "L'appli va t'interrompre avec des objections pendant que tu parles. À chaque fois : une respiration basse avant de répondre, et tu repars sur ta note naturelle. L'appli compare ta hauteur avant et après les objections. L'objectif n'est pas de ne rien ressentir, c'est que ta voix ne le trahisse pas.",
-    ok: "Après une objection, ta voix ne monte pas de plus d'un demi-ton.",
-    deep: ["Le réflexe à construire : objection, inspiration, réponse. La respiration remet la voix en place.", "Sous pression, on accélère. Ralentir fait redescendre la voix tout seul.", "Avant une réunion importante : trois « mm-hmm », une expiration longue, et la première phrase sur ta note."],
-    ex: [
-      { k: "voice", t: "Garder ta note quand on te coupe", how: "Réponds à la question pendant une minute. Quand une objection tombe : inspire, puis réponds sur ta note.", mode: "free", pressure: true },
-      { k: "voice", t: "Lire malgré les interruptions", how: "Lis le texte. Quand une objection tombe : inspire, réponds en une phrase, puis reprends la lecture sur ta note.", mode: "read", text: 2, pressure: true }
-    ] },
-
-  { t: "Au quotidien", n: 9999,
-    why: "Ton timbre s'entretient comme une posture : un peu chaque jour, et surtout dans tes vraies conversations.",
-    x: "Chaque séance alterne une mesure de ta note naturelle, une lecture et une improvisation sous pression. Dans la journée, prends l'habitude de vérifier ta voix aux moments clés : la première phrase d'une réunion, une réponse à une objection, une présentation.",
-    ok: "Ta voix reste dans ta zone plus de 75 % du temps, y compris sous pression.",
-    deep: ["Avant une réunion : trois « mm-hmm », une expiration longue, la première phrase sur ta note.", "Si ta voix monte en pleine discussion : ralentis, respire au prochain point.", "Bois de l'eau dans la journée : des cordes vocales hydratées vibrent plus facilement."],
-    ex: [
-      { k: "voice", t: "Sous pression", how: "Réponds à la question. Objection : inspire, puis réponds sur ta note.", mode: "free", pressure: true },
-      { k: "find" },
-      { k: "voice", t: "Lire dans ta zone", how: "Lis le texte, fins pleines, mots-clés appuyés.", mode: "read", text: 1, goal: "var" }
-    ] }
-];
-
-window.PARLER_WARM = [
-  { t: "Échauffement · soupirs et « mm-hmm »", how: "Trois bâillements-soupirs, du haut vers le bas. Puis cinq « mm-hmm » d'approbation, lèvres fermées. Puis dis « bonjour » sur la note du « mm-hmm »." },
-  { t: "Échauffement · trilles de lèvres", how: "Trilles de lèvres (« brrr ») en glissant doucement vers le haut et vers le bas, 30 secondes. Puis « brrr… bonjour à tous », trois fois." },
-  { t: "Échauffement · mâchoire et « mmm »", how: "Masse la mâchoire devant les oreilles, bouche entrouverte, 20 secondes. Puis « mmm » sur ta note naturelle, en sentant les lèvres vibrer, et « mmm-mon, mmm-mais, mmm-moi »." }
-];
 
 window.PARLER_TEXTS = [
   "Bonjour à tous. Je vais vous présenter la nouvelle identité visuelle en trois points. D'abord, le constat : l'ancienne image ne parlait plus à nos clients. Ensuite, la proposition : une palette plus claire et une typographie plus lisible. Enfin, la suite : les premiers supports seront prêts dans trois semaines. Ma recommandation est simple : lancer la nouvelle identité dès le mois prochain.",
   "Ce projet repose sur une idée <b>simple</b>. Nos clients ne lisent pas, ils <b>regardent</b>. Nous avons donc choisi une seule image forte par page, et une typographie <b>généreuse</b>. Le résultat est plus <b>calme</b>, plus <b>lisible</b>, et il se reconnaît de loin. C'est cette <b>clarté</b> que je vous propose de garder.",
   "Pour cette campagne, nous avons exploré deux pistes. La première joue sur la couleur : un orange franc, qui attire l'œil en rayon. La seconde mise sur la photographie : des portraits en noir et blanc, plus sobres. Je recommande la première. Elle se distingue mieux de la concurrence, et elle fonctionne aussi bien sur une affiche que sur un écran de téléphone."
+];
+
+window.LISTS.BRIEFS = ["« Je veux un logo moderne. »", "« Il faudrait que le site fasse plus premium. »", "« On veut quelque chose qui claque. »", "« Fais-moi une affiche, mais pas trop chargée. »", "« Il faut que ça parle aux jeunes. »", "« Revois un peu les couleurs. »"];
+
+/* Chaque fiche : t (titre), sub (une ligne), key (la règle), why, how (3 étapes), ex (exemple, facultatif),
+   train (exercice dans l'appli, facultatif), daily (à essayer dans la vraie vie). */
+window.THEMES = [
+{ id: "fond", t: "Fond", sub: "Organiser ses idées avant de parler.", fiches: [
+  { id: "destination", t: "La destination", sub: "Savoir où tu vas avant de parler",
+    key: "Avant de parler, décide de ta dernière phrase.",
+    why: "Si tu ne sais pas où tu vas, tu cherches en parlant : c'est de là que viennent les reprises et les détours. Connaître ta conclusion te donne un cap.",
+    how: ["Laisse passer deux secondes avant de répondre.", "Formule ta dernière phrase dans ta tête : ce que l'autre doit retenir ou décider.", "Dis-la dès le début, puis développe."],
+    ex: { bad: "Alors, en fait, on a regardé plusieurs choses, et euh…", good: "Je recommande la piste bleue. Voici pourquoi." },
+    train: { k: "rec", list: "AVIS", sec: 60, how: "Décide de ta dernière phrase, puis réponds en une minute en commençant par elle.", checks: ["Ma destination est dite dans les dix premières secondes.", "Ma dernière phrase reprend la première."] },
+    daily: "À ta prochaine réponse en réunion, laisse deux secondes et décide de ta dernière phrase avant d'ouvrir la bouche." },
+  { id: "plan", t: "Annoncer le plan", sub: "Dire combien de points tu vas aborder",
+    key: "Annonce le nombre de points, puis numérote-les.",
+    why: "L'auditeur sait où il en est et attend la suite. Toi aussi : le nombre annoncé t'oblige à trier, et te rattrape si tu te perds.",
+    how: ["Trie : garde deux ou trois points, jamais plus.", "Annonce le nombre : « Deux raisons. »", "Numérote en parlant : « La première… La deuxième… »"],
+    ex: { bad: "Il y a la couleur, et puis aussi la typo, et sinon…", good: "Deux raisons : la lisibilité et le coût." },
+    train: { k: "rec", list: "AVIS", sec: 60, how: "Réponds en annonçant d'abord combien de points tu vas donner.", checks: ["J'ai annoncé un nombre.", "J'ai tenu ce nombre, sans en ajouter."] },
+    daily: "Aujourd'hui, commence au moins une explication par « Il y a deux choses »." },
+  { id: "phrase", t: "Une idée par phrase", sub: "Des phrases courtes, et finies",
+    key: "Une phrase, une idée, un point final.",
+    why: "Les phrases à rallonge (« et donc… parce que… enfin… ») perdent l'auditeur, et te perdent toi. Les reprises naissent souvent au milieu d'une phrase trop longue.",
+    how: ["Dis ton idée en moins de quinze mots.", "Pose un vrai point : ta voix descend, tu respires.", "Si une autre idée arrive, elle aura sa propre phrase."],
+    ex: { bad: "On a choisi ce bleu parce que le client voulait du calme et donc en fait ça marche aussi avec le logo qui…", good: "On a choisi ce bleu. Il est calme, comme le client le voulait. Et il s'accorde avec le logo." },
+    train: { k: "rec", list: "QUICK", sec: 60, how: "Réponds en phrases courtes. Chaque phrase se termine par un vrai point.", checks: ["Mes phrases sont courtes.", "Je les termine, sans les abandonner en route."] },
+    daily: "Dans tes messages écrits d'aujourd'hui, une idée par phrase. L'écrit entraîne l'oral." },
+  { id: "motscles", t: "Les mots-clés", sub: "Choisir ce que l'autre doit retenir",
+    key: "Choisis trois mots à faire entendre, et appuie-les.",
+    why: "L'auditeur ne retient pas des phrases, il retient des mots. Si tu les choisis à l'avance et que tu les répètes, ce sont eux qui restent.",
+    how: ["Avant de parler, note trois mots-clés.", "Dis-les plus lentement, avec une courte pause avant.", "Répète-les : au début, au milieu, à la fin."],
+    train: { k: "rec", list: "PROJETS", sec: 90, how: "Choisis trois mots-clés, puis présente en les faisant entendre.", checks: ["Mes trois mots-clés s'entendent.", "Je les ai répétés."] },
+    daily: "Avant ta prochaine réunion, écris trois mots-clés sur un papier. Fais-les entendre." },
+  { id: "boucler", t: "Boucler", sub: "Finir net, sur ta destination",
+    key: "Termine par ta destination, puis tais-toi.",
+    why: "Une fin nette donne de l'autorité. Sans elle, on ajoute, on s'excuse, on dilue. La dernière phrase est celle qu'on retient.",
+    how: ["Reviens à ta phrase de départ : « Donc, je recommande… »", "Laisse ta voix descendre sur le dernier mot.", "Silence. Ne rajoute rien, laisse l'autre réagir."],
+    ex: { bad: "…voilà, enfin, c'est un peu l'idée quoi.", good: "Donc : la piste bleue, lancée en mars." },
+    train: { k: "rec", list: "AVIS", sec: 60, how: "Réponds, et termine par une phrase de conclusion, puis silence.", checks: ["J'ai fini sur ma destination.", "Sans « voilà » ni ajout après."] },
+    daily: "Aujourd'hui, finis chaque prise de parole par une phrase claire, puis tais-toi deux secondes." },
+  { id: "choix", t: "Expliquer un choix", sub: "Intention, choix, effet",
+    key: "Relie chaque choix à une intention et à un effet.",
+    why: "« Je trouve ça bien » ne convainc personne. Relier un choix créatif à une intention et à un effet le rend évident, même pour quelqu'un qui n'est pas designer.",
+    how: ["L'intention : ce que le projet doit faire ressentir ou accomplir.", "Le choix : ce que tu as décidé (couleur, typographie, image…).", "L'effet : ce que ce choix produit chez le public."],
+    ex: { good: "On voulait rassurer. D'où une typographie à empattements et beaucoup de blanc. Résultat : le site paraît sérieux et calme." },
+    train: { k: "rec", list: "PROJETS", sec: 90, how: "Présente le projet en suivant intention, choix, effet.", checks: ["J'ai dit l'intention avant le choix.", "Chaque choix est relié à un effet."] },
+    daily: "Au prochain retour client ou en équipe, justifie un choix par « l'intention était… donc… ce qui fait que… »." },
+  { id: "raconter", t: "Raconter", sub: "Situation, problème, solution",
+    key: "Présente en trois temps : situation, problème, solution.",
+    why: "Une histoire tient l'attention parce qu'elle crée une attente. Présenter un projet comme une histoire rend ton raisonnement facile à suivre et à retenir.",
+    how: ["La situation : le contexte, en une phrase.", "Le problème : ce qui coinçait. C'est lui qui crée l'intérêt.", "La solution : ce que tu as fait, et le résultat."],
+    ex: { good: "Le client vendait bien en boutique. Mais en ligne, personne ne le reconnaissait. On a créé un signe simple, visible partout : les ventes en ligne ont suivi." },
+    train: { k: "rec", list: "PROJETS", sec: 90, how: "Raconte le projet : situation, problème, solution.", checks: ["On entend clairement le problème.", "La solution répond à ce problème."] },
+    daily: "Aujourd'hui, raconte un moment de ta journée à quelqu'un en trois temps : situation, problème, solution." },
+  { id: "enseigner", t: "Enseigner", sub: "Expliquer simplement un sujet",
+    key: "Explique un sujet comme à un débutant, en trois minutes.",
+    why: "Enseigner oblige à comprendre et à structurer. Si tu ne peux pas l'expliquer simplement, c'est que la structure n'est pas encore claire. C'est aussi le meilleur entraînement pour devenir enseignant.",
+    how: ["Destination : ce que l'élève saura à la fin.", "Trois points, chacun avec un exemple concret.", "Une boucle : résume en une phrase."],
+    train: { k: "rec", list: "MINICOURS", sec: 180, how: "Fais un cours de trois minutes sur ce sujet, pour un débutant.", checks: ["Un débutant aurait compris.", "Chaque point a un exemple."] },
+    daily: "Explique à un proche une notion de ton métier (la grille, le contraste…) en moins de deux minutes." }
+] },
+
+{ id: "voix", t: "Voix", sub: "La forme : comment tu le dis.", fiches: [
+  { id: "note", t: "Ta note naturelle", sub: "Trouver ton timbre, et le garder",
+    key: "Parle sur ta note naturelle, pas au-dessus.",
+    why: "Sous stress, la voix monte et se serre. Ta note naturelle est celle où ta voix sonne pleine, sans effort : elle inspire calme et confiance.",
+    how: ["Dis « mm-hmm » comme pour approuver : c'est ta note.", "Commence tes phrases sur cette note.", "Si ta voix monte, ralentis et respire : elle redescend."],
+    train: [{ k: "find" }, { k: "voice", mode: "read", how: "Lis le texte comme en réunion. La bande verte, c'est ta zone." }],
+    daily: "Avant ta première réunion : trois « mm-hmm », puis ta première phrase sur cette note." },
+  { id: "souffle", t: "Le souffle", sub: "Respirer bas, et à chaque point",
+    key: "Une phrase, un souffle : respire à chaque point.",
+    why: "Un souffle court et haut serre la gorge : la voix monte et s'éteint en fin de phrase. Respirer bas et souvent pose la voix et crée des pauses naturelles.",
+    how: ["Inspire par le ventre et les côtes basses, épaules immobiles.", "Reprends de l'air à chaque point, sans attendre d'être vide.", "Laisse l'air sortir régulièrement en parlant."],
+    train: [{ k: "breath" }, { k: "voice", mode: "read", goal: "fins", how: "Lis le texte en respirant à chaque point." }],
+    daily: "Aujourd'hui, en réunion, prends une inspiration à la fin de chaque phrase avant la suivante." },
+  { id: "silence", t: "Le silence", sub: "À la place du « euh »",
+    key: "Remplace le « euh » par un silence.",
+    why: "Le « euh » remplit le vide pendant que tu cherches. Le silence fait la même chose, mais il donne une impression de maîtrise. Une pause de deux secondes te paraît longue ; pour l'auditeur, elle est normale.",
+    how: ["Repère quand le « euh » arrive : en début de phrase, entre deux idées.", "À la place, ferme la bouche et respire.", "Fais une pause avant une idée importante : elle prend du poids."],
+    train: { k: "rec", list: "QUICK", sec: 60, how: "Réponds en une minute. Quand tu cherches, tais-toi au lieu de dire « euh ».", checks: ["Compte tes « euh » à la réécoute, pour comparer la prochaine fois.", "Mes silences sont restés calmes."] },
+    daily: "Aujourd'hui, quand tu cherches ton mot, tais-toi au lieu de dire « euh »." },
+  { id: "debit", t: "Le débit", sub: "Ralentir pour paraître sûr",
+    key: "Ralentis : plus lent paraît plus sûr.",
+    why: "Sous pression, on accélère pour en finir. Un débit posé te laisse le temps de penser et d'articuler, et donne de l'autorité.",
+    how: ["Parle un peu plus lentement qu'en conversation.", "Ralentis encore sur les mots-clés et les chiffres.", "Articule les fins de mots."],
+    train: { k: "voice", mode: "read", how: "Lis le texte lentement : vise au moins 30 secondes au compteur." },
+    daily: "Dans ta prochaine conversation importante, parle volontairement plus lentement que d'habitude." },
+  { id: "doute", t: "Les mots de doute", sub: "Ce qui affaiblit ce que tu dis",
+    key: "Supprime les mots qui affaiblissent ton idée.",
+    why: "« Je pense que », « un peu », « peut-être », « en fait » : chacun retire de la force à ce que tu dis. Accumulés, ils font douter l'auditeur, même quand tu as raison.",
+    how: ["Repère tes trois mots de doute préférés.", "Supprime-les : « C'est un peu trop sombre » devient « C'est trop sombre ».", "Si tu doutes vraiment, dis-le une fois, clairement : « Je vérifie et je te dis. »"],
+    ex: { bad: "Je pense que ce serait peut-être un peu mieux en bleu.", good: "Ce sera mieux en bleu." },
+    train: { k: "rec", list: "DOUTES", sec: 45, how: "Réponds à la situation sans aucun mot de doute.", checks: ["Compte tes mots de doute à la réécoute.", "J'ai dit clairement ce que je sais et ce que je ne sais pas."] },
+    daily: "Aujourd'hui, chasse un seul mot : « un peu »." },
+  { id: "melodie", t: "La mélodie", sub: "Faire vivre les mots importants",
+    key: "Souligne les mots importants avec ta voix.",
+    why: "Une voix plate fait décrocher, même quand le fond est bon. La mélodie souligne le sens et montre que tu crois à ce que tu dis.",
+    how: ["Monte légèrement sur le mot important.", "Ou ralentis dessus.", "Ou fais une courte pause juste avant."],
+    train: { k: "voice", mode: "read", text: 1, goal: "var", how: "Lis le texte en faisant ressortir les mots en gras." },
+    daily: "Aujourd'hui, en racontant quelque chose, souligne un mot par une pause juste avant." },
+  { id: "fins", t: "Les fins de phrase", sub: "Tenir la voix jusqu'au dernier mot",
+    key: "Tiens ta voix jusqu'au dernier mot, puis arrête-toi net.",
+    why: "Une fin qui s'éteint, ou qui monte comme une question, fait douter. Une affirmation descend, sur une voix pleine, puis s'arrête.",
+    how: ["Garde assez d'air pour finir.", "Appuie légèrement le dernier mot.", "Pour affirmer, la voix descend. Pour questionner, elle monte."],
+    train: { k: "voice", mode: "read", goal: "fins", how: "Lis le texte. Appuie le dernier mot de chaque phrase, puis silence." },
+    daily: "Aujourd'hui, écoute la fin de tes phrases : est-ce qu'elles montent comme des questions ?" }
+] },
+
+{ id: "corps", t: "Corps", sub: "La présence : ce que l'on voit de toi.", fiches: [
+  { id: "regard", t: "Le regard", sub: "Créer le lien, montrer l'assurance",
+    key: "Regarde une personne par idée.",
+    why: "Le regard crée le lien et montre l'assurance. Fuir le regard donne une impression de doute, même avec un bon discours.",
+    how: ["En tête-à-tête, regarde l'autre surtout quand tu termines tes phrases.", "En groupe : une idée, une personne. Puis passe à la suivante.", "Pour réfléchir, tu peux détourner les yeux, puis revenir pour conclure."],
+    daily: "Aujourd'hui, regarde ton interlocuteur dans les yeux jusqu'à la fin de chacune de tes phrases." },
+  { id: "ancrage", t: "L'ancrage", sub: "Une posture stable",
+    key: "Pieds ancrés, poids réparti, épaules basses.",
+    why: "Un corps stable rassure l'auditeur, et toi aussi. Se balancer, croiser les jambes ou se tasser trahit la tension.",
+    how: ["Debout : pieds écartés de la largeur du bassin, poids sur les deux jambes.", "Assis : les deux pieds au sol, le dos droit.", "Relâche les épaules à chaque respiration."],
+    train: { k: "timer", sec: 60, how: "Debout devant un miroir, ancre-toi, puis présente-toi en trente secondes sans bouger les pieds." },
+    daily: "Au début de ta prochaine réunion, pose tes deux pieds à plat avant de prendre la parole." },
+  { id: "mains", t: "Les mains", sub: "Des gestes qui aident à comprendre",
+    key: "Mains visibles, gestes ouverts qui illustrent.",
+    why: "Les gestes aident à penser et à se faire comprendre. Des mains cachées, ou qui tripotent un objet, trahissent la nervosité.",
+    how: ["Garde les mains visibles, entre la taille et la poitrine.", "Fais des gestes qui illustrent : compter sur les doigts, séparer deux idées.", "Entre deux gestes, laisse les mains au repos, simplement jointes."],
+    train: { k: "timer", sec: 90, how: "Devant un miroir, explique deux pistes graphiques. Compte les points sur tes doigts et sépare les deux pistes avec tes mains." },
+    daily: "Aujourd'hui, quand tu annonces deux points, compte-les sur tes doigts." },
+  { id: "visage", t: "Le visage", sub: "Le ton avant les mots",
+    key: "Visage détendu, sourire au début et à la fin.",
+    why: "Le visage donne le ton avant les mots. Un front crispé ou une mâchoire serrée se voient, et s'entendent dans la voix.",
+    how: ["Relâche la mâchoire et le front avant de parler.", "Souris en saluant et en concluant.", "Laisse le visage suivre ce que tu dis : sérieux sur un problème, ouvert sur une solution."],
+    daily: "Aujourd'hui, souris franchement en disant bonjour à chaque personne." },
+  { id: "ecoute", t: "Écouter avec le corps", sub: "Montrer que tu écoutes",
+    key: "Tourné vers l'autre, immobile, attentif.",
+    why: "Écouter vraiment donne confiance à l'autre, et te donne le droit de parler ensuite. C'est aussi en écoutant que tu trouves quoi répondre.",
+    how: ["Tourne les épaules vers celui qui parle.", "Arrête de faire autre chose : téléphone, ordinateur.", "Attends une seconde après la fin de sa phrase avant de répondre."],
+    daily: "Dans ta prochaine conversation, attends une seconde de silence avant chaque réponse." },
+  { id: "trac", t: "Le trac", sub: "Une routine pour avant de parler",
+    key: "Respirer, s'ancrer, connaître sa première phrase.",
+    why: "Le trac est une montée d'adrénaline normale : on ne le supprime pas, on le canalise. Une expiration longue calme le corps en quelques secondes.",
+    how: ["Inspire sur 4 temps, expire sur 6 temps, trois fois.", "Ancre tes pieds, relâche les épaules.", "Connais ta première phrase par cœur : le plus dur, c'est de commencer."],
+    train: { k: "timer", sec: 60, how: "La routine : trois respirations 4-6, ancrage des pieds, puis dis ta première phrase à voix haute." },
+    daily: "Avant ta prochaine prise de parole, fais trois expirations longues." }
+] },
+
+{ id: "echange", t: "Échange", sub: "L'interaction : répondre, tenir, convaincre.", fiches: [
+  { id: "repondre", t: "Répondre d'abord", sub: "La réponse, puis l'explication",
+    key: "La réponse d'abord, l'explication ensuite.",
+    why: "Quand on te pose une question, l'autre attend une réponse. Si tu commences par le contexte, il s'impatiente et te coupe.",
+    how: ["Réponds en une phrase : oui, non, un chiffre, une date.", "Donne la raison principale.", "Un exemple si besoin, puis répète la réponse."],
+    ex: { q: "Ce sera prêt vendredi ?", bad: "Alors, il y a eu des retours, le développeur…", good: "Non, lundi. Il manque les retours du client. Lundi matin, c'est sûr." },
+    train: { k: "ask", list: "QUICK", how: "L'appli te pose une question. Réponds : réponse, raison, exemple, réponse.", checks: ["Ma première phrase répond à la question."] },
+    daily: "Aujourd'hui, à chaque question, commence par la réponse en une phrase." },
+  { id: "reformuler", t: "Reformuler", sub: "Comprendre, et gagner du temps",
+    key: "Reformule la question avant de répondre.",
+    why: "Reformuler montre que tu as compris, te donne trois secondes pour réfléchir, et recentre la question à ta façon.",
+    how: ["« Si je comprends bien, tu te demandes si… »", "Vérifie : « C'est bien ça ? »", "Puis réponds."],
+    train: { k: "ask", list: "OBJ", how: "L'appli te fait une remarque. Reformule-la, puis réponds.", checks: ["J'ai reformulé avant de répondre.", "Ma reformulation est neutre, sans me défendre."] },
+    daily: "Aujourd'hui, reformule au moins une question avant d'y répondre." },
+  { id: "objection", t: "Gérer une objection", sub: "Reconnaître, puis répondre",
+    key: "Reconnais, réponds court, reviens à ton point.",
+    why: "Une objection n'est pas une attaque, c'est une information. Se justifier longuement lui donne raison. Reconnaître ce qui est juste te rend crédible.",
+    how: ["Reconnais : « Tu as raison sur ce point. »", "Réponds en une ou deux phrases.", "Reviens à ta destination."],
+    ex: { q: "C'est trop sobre.", good: "Je comprends. La sobriété est voulue : elle met le produit en avant. On peut ajouter de la couleur dans les visuels, pas dans la structure." },
+    train: { k: "ask", list: "OBJ", how: "L'appli te fait une objection. Reconnais, réponds court, reviens à ton point.", checks: ["J'ai reconnu avant de répondre.", "Réponse courte, sans me justifier."] },
+    daily: "À la prochaine critique, commence par « Tu as raison sur… » avant ta réponse." },
+  { id: "main", t: "Reprendre la main", sub: "Quand on te coupe ou qu'on dévie",
+    key: "Laisse finir, reconnais, reviens à ton fil.",
+    why: "Quand on te coupe ou qu'on dévie, tu perds ton fil et l'autre prend la conversation. Une phrase de transition te permet de revenir sans conflit.",
+    how: ["Laisse l'autre finir sa phrase.", "Reconnais en quelques mots : « Bonne question. »", "Ramène : « Je termine mon point, et on en parle juste après. »"],
+    train: { k: "rec", list: "PROJETS", sec: 90, cut: "DIGRESSIONS", how: "Présente. L'appli va t'interrompre : reconnais, puis reviens à ton fil.", checks: ["Je suis revenu à mon fil après l'interruption.", "Sans m'agacer ni me justifier."] },
+    daily: "Aujourd'hui, si on te coupe, dis « Je termine mon idée, et je t'écoute »." },
+  { id: "sais", t: "« Je ne sais pas »", sub: "Rester crédible sans la réponse",
+    key: "Dis ce que tu sais, ce que tu ne sais pas, et quand tu sauras.",
+    why: "Inventer ou noyer le poisson se voit. Admettre clairement ce que tu ne sais pas, avec une suite concrète, renforce la confiance.",
+    how: ["Dis ce que tu sais.", "Dis ce que tu ne sais pas, sans t'excuser.", "Donne une suite : quoi, et quand."],
+    ex: { q: "La police est libre de droits ?", good: "Je vérifie la licence aujourd'hui et je te confirme avant 17 h." },
+    train: { k: "ask", list: "DOUTES", how: "L'appli te décrit une situation. Réponds avec une suite concrète et une échéance.", checks: ["Pas de « je pense que peut-être ».", "Une suite concrète, avec une échéance."] },
+    daily: "La prochaine fois que tu ne sais pas, réponds avec une échéance précise." },
+  { id: "debattre", t: "Débattre", sub: "Concéder, puis défendre",
+    key: "Concède un point, puis défends ta position.",
+    why: "Celui qui reconnaît ce qui est juste chez l'autre paraît plus raisonnable, et devient plus convaincant. La concession désarme, l'argument conclut.",
+    how: ["Concède : « C'est vrai que… »", "Oppose : « Mais… », avec ton argument principal.", "Conclus par ta position, en une phrase."],
+    train: { k: "rec", list: "DEBATS", sec: 90, cut: "CONTRA", how: "Défends ta position. L'appli va te contredire : concède, puis argumente.", checks: ["J'ai concédé un point.", "Ma position est claire à la fin."] },
+    daily: "Aujourd'hui, dans un désaccord, commence par « C'est vrai que… mais… »." },
+  { id: "questions", t: "Poser des questions", sub: "Comprendre avant de proposer",
+    key: "Pose une question avant de proposer.",
+    why: "Une bonne question fait parler l'autre et te donne des informations. Celui qui pose les questions guide la conversation.",
+    how: ["Ouvre : « Qu'est-ce qui compte le plus pour toi ? »", "Creuse : « C'est-à-dire ? », « Par exemple ? »", "Reformule, puis propose."],
+    train: { k: "ask", list: "BRIEFS", how: "Un client te donne une demande floue. Pose-lui trois questions pour comprendre ce qu'il veut vraiment.", checks: ["Mes questions sont ouvertes.", "Elles vont vers le besoin réel."] },
+    daily: "À ta prochaine demande floue, réponds par une question avant de proposer quoi que ce soit." }
+] }
+];
+
+/* Fiches de vocabulaire : des mots à ajouter à ton paquet. */
+window.VOCAB = [
+  { id: "verbes", t: "Des verbes précis", sub: "À la place de « faire » et « mettre »",
+    key: "Un verbe précis vaut mieux qu'un verbe passe-partout.",
+    why: "« Faire », « mettre », « avoir » disent peu. Un verbe précis rend ta pensée claire et montre ta maîtrise du sujet.",
+    daily: "Aujourd'hui, remplace au moins une fois « faire » par un verbe précis.",
+    words: [
+      ["concevoir", "Imaginer et créer quelque chose en partant d'une idée.", "J'ai conçu cette identité autour d'un seul signe."],
+      ["élaborer", "Construire avec soin, étape par étape.", "Nous avons élaboré trois pistes."],
+      ["ajuster", "Modifier légèrement pour que ce soit juste.", "J'ai ajusté l'espacement des lettres."],
+      ["hiérarchiser", "Classer par ordre d'importance.", "Il faut hiérarchiser les informations de l'affiche."],
+      ["privilégier", "Choisir en priorité, donner l'avantage à.", "J'ai privilégié la lisibilité."],
+      ["souligner", "Faire ressortir, mettre en valeur.", "La couleur souligne le titre."],
+      ["affiner", "Rendre plus précis, plus subtil.", "On va affiner la palette."],
+      ["valoriser", "Donner plus de valeur, montrer sous son meilleur jour.", "Ce cadrage valorise le produit."]
+    ] },
+  { id: "connecteurs", t: "Les connecteurs", sub: "Pour structurer ce que tu dis",
+    key: "Les connecteurs montrent la logique de ta pensée.",
+    why: "« Et », « du coup », « après » enchaînent sans dire le lien. Un connecteur précis annonce à l'auditeur ce qui arrive : une suite, une opposition, une conséquence.",
+    daily: "Aujourd'hui, utilise « en revanche » au moins une fois.",
+    words: [
+      ["en revanche", "Introduit une opposition.", "La piste A est lisible. En revanche, elle est moins originale."],
+      ["par conséquent", "Introduit une conséquence.", "Le budget baisse ; par conséquent, on simplifie."],
+      ["autrement dit", "Annonce une reformulation plus simple.", "Autrement dit, moins de couleurs."],
+      ["concrètement", "Annonce un exemple ou une application.", "Concrètement, le logo passe en noir."],
+      ["néanmoins", "Malgré cela. Une opposition plus soutenue.", "C'est risqué ; néanmoins, ça vaut le coup."],
+      ["d'une part… d'autre part", "Présente deux arguments de même poids.", "D'une part c'est lisible, d'autre part c'est moins cher."],
+      ["en somme", "Annonce un résumé, une conclusion.", "En somme : une identité plus simple et plus forte."],
+      ["ainsi", "Introduit une conséquence ou un exemple.", "Ainsi, le message se lit de loin."]
+    ] },
+  { id: "tics", t: "Remplacer ses tics", sub: "« Genre », « du coup », « en fait »…",
+    key: "Remplace un tic par un mot qui dit vraiment quelque chose.",
+    why: "Les tics de langage remplissent sans rien dire, et donnent une impression de flou. Les remplacer par un mot précis rend ton discours plus net.",
+    daily: "Aujourd'hui, chasse « du coup ».",
+    words: [
+      ["donc", "Remplace « du coup » pour une conséquence.", "Le client valide, donc on lance."],
+      ["par exemple", "Remplace « genre » pour illustrer.", "Des couleurs vives, par exemple un orange franc."],
+      ["légèrement", "Remplace « un peu » quand la nuance est voulue.", "C'est légèrement trop serré."],
+      ["vraiment", "Remplace « trop » au sens de « très ».", "C'est vraiment réussi."],
+      ["précisément", "Remplace « en fait » pour insister.", "C'est précisément ce qu'on cherche."],
+      ["pour conclure", "Remplace « voilà » en fin de prise de parole.", "Pour conclure : la piste bleue."]
+    ] },
+  { id: "visuel", t: "Parler d'un visuel", sub: "Le vocabulaire du directeur artistique",
+    key: "Nomme précisément ce que l'on voit.",
+    why: "« C'est joli », « ça rend bien » ne t'aident pas à convaincre. Le vocabulaire visuel précis te rend crédible et aide le client à voir ce que tu vois.",
+    daily: "Aujourd'hui, décris un visuel que tu croises avec trois mots de cette fiche.",
+    words: [
+      ["contraste", "Différence marquée entre deux éléments (couleur, taille, graisse).", "Le contraste entre le titre et le fond guide l'œil."],
+      ["hiérarchie", "Ordre de lecture voulu entre les éléments.", "La hiérarchie est claire : titre, image, prix."],
+      ["équilibre", "Répartition harmonieuse des masses dans l'espace.", "L'image à gauche équilibre le texte à droite."],
+      ["rythme", "Répétition et alternance qui créent un mouvement.", "Les colonnes donnent un rythme régulier."],
+      ["respiration", "Espace vide qui laisse les éléments exister.", "Il manque de la respiration autour du logo."],
+      ["lisibilité", "Facilité avec laquelle on lit et comprend.", "La lisibilité prime sur l'effet."],
+      ["cohérence", "Unité entre tous les éléments d'un ensemble.", "La cohérence entre le site et l'affiche est forte."],
+      ["tension", "Dynamique créée par un déséquilibre volontaire.", "Le cadrage serré crée de la tension."]
+    ] },
+  { id: "adjectifs", t: "Des adjectifs précis", sub: "Au-delà de « beau » et « bien »",
+    key: "Un adjectif précis dit pourquoi c'est bien.",
+    why: "« Beau », « sympa », « cool » donnent un avis. Un adjectif précis donne une raison, et ouvre la discussion.",
+    daily: "Aujourd'hui, au lieu de « c'est beau », dis pourquoi avec un adjectif précis.",
+    words: [
+      ["épuré", "Débarrassé du superflu, réduit à l'essentiel.", "Une mise en page épurée."],
+      ["percutant", "Qui frappe tout de suite, qui marque.", "Un titre percutant."],
+      ["chaleureux", "Qui donne une impression de proximité, d'accueil.", "Une palette chaleureuse."],
+      ["audacieux", "Qui ose, qui prend un risque.", "Un choix de couleur audacieux."],
+      ["singulier", "Qui se distingue, unique.", "Une identité singulière."],
+      ["intemporel", "Qui ne vieillira pas, hors des modes.", "Un logo intemporel."],
+      ["dense", "Riche en éléments, très rempli.", "La page est trop dense."],
+      ["élégant", "Raffiné avec simplicité.", "Une typographie élégante."]
+    ] },
+  { id: "nuancer", t: "Nuancer avec assurance", sub: "Être précis sans douter",
+    key: "Nuancer, c'est préciser, pas hésiter.",
+    why: "« Je pense que peut-être » sonne comme un doute. Une nuance précise montre au contraire que tu as réfléchi aux limites de ton idée.",
+    daily: "Aujourd'hui, remplace « je pense que » par « à mon sens » ou « je recommande ».",
+    words: [
+      ["à mon sens", "Donne ton avis avec assurance.", "À mon sens, la piste B est plus forte."],
+      ["je recommande", "Formule une décision claire.", "Je recommande de garder le bleu."],
+      ["à ce stade", "Situe ton avis dans le temps, sans l'affaiblir.", "À ce stade, la maquette fonctionne."],
+      ["dans la plupart des cas", "Généralise sans prétendre à l'absolu.", "Dans la plupart des cas, un logo simple fonctionne mieux."],
+      ["sous réserve de", "Pose une condition claire.", "Sous réserve de validation, on lance lundi."],
+      ["en l'état", "Tel que c'est aujourd'hui.", "En l'état, le texte est trop long."]
+    ] }
 ];

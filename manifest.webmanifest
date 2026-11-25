@@ -1,7 +1,7 @@
 {
   "name": "Voix",
   "short_name": "Voix",
-  "description": "Quinze minutes par jour : maîtriser sa voix en chantant, structurer ses idées en parlant.",
+  "description": "Devenir un meilleur communicant : fond, voix, corps, échange et vocabulaire.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

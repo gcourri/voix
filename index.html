@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Voix</title>
-<meta name="description" content="Structurer ses idées et ses présentations : une mission par jour, un exercice de 10 minutes, un mini-cours par semaine.">
+<meta name="description" content="Devenir un meilleur communicant : des fiches courtes sur le fond, la voix, le corps et l'échange, et des flashcards de vocabulaire.">
 <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
@@ -173,102 +173,56 @@ audio{width:100%;height:40px}
 .stat b{display:block;font-size:20px;font-weight:700;letter-spacing:-.02em}
 .stat span{font-size:13px;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* ===== Structure en fiches ===== */
+.ic.parole{background:#ff9f0a}.ic.voix{background:#30b0c7}.ic.corps{background:#34c759}.ic.echange{background:#5e5ce6}.ic.mots{background:#ff375f}
+.eyebrow{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;color:var(--muted);margin:0 0 4px}
+.eyebrow.parole{color:#c77700}.eyebrow.voix{color:#1f8ea3}.eyebrow.corps{color:var(--ok)}.eyebrow.echange{color:#5e5ce6}.eyebrow.mots{color:#e0244a}
+.title{font-size:30px;font-weight:700;letter-spacing:-.022em;line-height:1.12}
+.back{align-self:flex-start;background:none;border:0;color:var(--accent);font-size:17px;padding:4px 0;margin-bottom:-10px;display:flex;gap:4px;align-items:center}
+.back span{font-size:26px;line-height:1;margin-top:-3px}
+.keycard{background:var(--accent-soft);border-radius:var(--r);padding:18px 20px}
+.keycard p{font-size:21px;font-weight:600;line-height:1.35;letter-spacing:-.015em}
+.seg{display:flex;background:var(--fill);border-radius:12px;padding:3px;gap:2px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 6px);z-index:5;box-shadow:0 0 0 6px var(--bg)}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:8px 4px;font-size:15px;font-weight:600;color:var(--muted);min-height:36px}
+.seg button[aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgb(0 0 0/.12)}
+.stack{display:flex;flex-direction:column;gap:14px;min-width:0}
+.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:12px}
+.steps li{counter-increment:s;display:flex;gap:12px;line-height:1.45}
+.steps li::before{content:counter(s);flex:0 0 26px;height:26px;border-radius:50%;background:var(--fill);display:grid;place-items:center;font-size:14px;font-weight:700;color:var(--muted)}
+.ex{display:flex;flex-direction:column;gap:2px;line-height:1.45}
+.ex span{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.ex.bad{color:var(--muted)}.ex.bad span{color:var(--off)}
+.ex.good{font-weight:500}.ex.good span{color:var(--ok)}
+.daily{font-size:21px;font-weight:600;line-height:1.4;letter-spacing:-.015em}
+.ticks{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.ticks li{padding-left:24px;position:relative;line-height:1.45}
+.ticks li::before{content:"○";position:absolute;left:0;color:var(--muted)}
+.seen{color:var(--ok);font-weight:700}
+.hero{background:var(--card);border-radius:var(--r);padding:24px 20px 20px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.hero .btn{margin-top:12px}
+.big-num{font-size:56px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.rv-top{display:flex;justify-content:space-between;align-items:center}
+.rv-top .back{margin:0}
+.flash{background:var(--card);border-radius:22px;padding:28px 22px;min-height:300px;display:flex;flex-direction:column;justify-content:center;gap:14px;text-align:center}
+.flash-w{font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
+.flash-d{font-size:21px;font-weight:500;line-height:1.4}
+.flash-back{border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:8px}
+.flash-a{font-size:30px;font-weight:700;color:var(--accent);letter-spacing:-.02em}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn.danger{background:none;color:var(--off)}
+.opt{font-weight:400;text-transform:none;letter-spacing:0}
 </style>
 </head>
 <body>
-
-<!-- AUJOURD'HUI -->
-<main class="screen wrap" id="home">
-  <header><h1 class="large">Aujourd'hui</h1><p class="sub" id="date"></p></header>
-  <div id="homeBody" style="display:flex;flex-direction:column;gap:22px"></div>
-</main>
-
-<!-- PRÉPARER -->
-<main class="screen wrap" id="preparer" hidden>
-  <header><h1 class="large">Préparer</h1><p class="sub">Avant une vraie présentation : pose ta structure, puis répète avec les objections que tu redoutes.</p></header>
-  <div>
-    <p class="section-label">Ta structure</p>
-    <div class="card fields">
-      <label>Sujet<input id="pSubject" placeholder="Ex. : présenter la maquette du site au client"></label>
-      <label>Destination : ta dernière phrase<input id="pKey" placeholder="Ce que tu veux que l'autre retienne ou décide"></label>
-      <label>Point 1 (ou l'intention)<input id="pP1"></label>
-      <label>Point 2<input id="pP2"></label>
-      <label>Point 3<input id="pP3"></label>
-    </div>
-  </div>
-  <div>
-    <p class="section-label">Objections que tu redoutes</p>
-    <div class="card"><textarea id="pObj" placeholder="Une par ligne. Ex. :&#10;Pourquoi ce choix de couleur ?&#10;C'est trop sobre.&#10;Ce sera prêt quand ?"></textarea></div>
-    <p class="foot-note">L'appli te les posera à voix haute pendant que tu parles.</p>
-  </div>
-  <button class="btn big pri" id="pGo">Répéter (2 prises de 2 min)</button>
-</main>
-
-<!-- PARCOURS -->
-<main class="screen wrap" id="parcours" hidden>
-  <header><h1 class="large">Parcours</h1></header>
-  <div><p class="section-label">Les réflexes</p><div class="group" id="lParole"></div><p class="foot-note">Touche un réflexe pour le travailler.</p></div>
-  <div><p class="section-label">Missions récentes</p><div class="group" id="lMissions"></div><p class="foot-note">Les progrès se font surtout là : dans tes vraies conversations.</p></div>
-  <div><p class="section-label">Mesures</p><div class="stats" id="stats"></div></div>
-  <div><p class="section-label">Réglages</p>
-    <div class="group">
-      <button class="cell" id="mtOpen"><div class="t"><b>Tester le micro</b><span>Diagnostic en cas de problème</span></div><span class="chev">›</span></button>
-    </div>
-    <div class="card" id="mtOut" hidden style="margin-top:10px"></div>
-  </div>
-</main>
-
-<!-- COACH VOCAL · PARLER -->
-<main class="screen wrap" id="parler" hidden>
-  <header><p class="eyebrow">Coach vocal</p><h1 class="large">Parler</h1><p class="sub">Trouver ton timbre naturel, et le garder quand ça compte.</p></header>
-  <div id="parlerBody" style="display:flex;flex-direction:column;gap:22px"></div>
-  <div><p class="section-label">Modules</p><div class="group" id="lVoix"></div><p class="foot-note">Touche un module pour le travailler.</p></div>
-  <div><p class="section-label">Mesures</p><div class="stats" id="vStats"></div></div>
-  <div><p class="section-label">Réglages</p><div class="group">
-    <div class="cell"><div class="t"><b>Note naturelle</b><span>Mesurée par l'appli, ajustable.</span></div><button class="btn sm" id="vDown" aria-label="Plus grave">−</button><span class="val mono" id="vNote">–</span><button class="btn sm" id="vUp" aria-label="Plus aigu">+</button></div>
-    <button class="cell" data-go="libre"><div class="t"><b>Courbe libre</b><span>Voir ta voix en direct</span></div><span class="chev">›</span></button>
-  </div></div>
-</main>
-
-<!-- COACH VOCAL · CHANTER -->
-<main class="screen wrap" id="chant" hidden>
-  <header><p class="eyebrow">Coach vocal</p><h1 class="large">Chanter</h1><p class="sub">Maîtriser ta voix, quand tu as 5 minutes de plus.</p></header>
-  <div id="chantBody"></div>
-  <div><p class="section-label">Modules</p><div class="group" id="lChant"></div></div>
-  <div><p class="section-label">Mesures</p><div class="stats" id="cStats"></div></div>
-  <div><p class="section-label">Réglages</p><div class="group">
-    <div class="cell"><div class="t"><b>Note de confort</b><span>Les exercices sont placés autour.</span></div><button class="btn sm" id="cDown" aria-label="Plus grave">−</button><span class="val mono" id="cNote">–</span><button class="btn sm" id="cUp" aria-label="Plus aigu">+</button></div>
-    <button class="cell" data-go="libre"><div class="t"><b>Courbe libre</b><span>Voir ta voix en direct</span></div><span class="chev">›</span></button>
-  </div></div>
-</main>
-
-<!-- COURBE LIBRE -->
-<main class="screen wrap" id="libre" hidden>
-  <div class="s-top"><button class="close" data-go="chant" aria-label="Fermer">✕</button><div class="where"><span>Courbe libre</span></div></div>
-  <p class="muted small">Chante ou parle : la courbe suit ta voix.</p>
-  <button class="btn big pri" id="lStart">Activer le micro</button>
-  <div id="lBody"></div>
-</main>
-
-<!-- SÉANCE -->
-<main class="screen wrap" id="seance" hidden>
-  <div class="s-top">
-    <button class="close" id="sQuit" aria-label="Quitter la séance">✕</button>
-    <div class="where"><span id="sWhere"></span><div class="bar"><i id="sBar"></i></div></div>
-  </div>
-  <header><p class="kicker" id="sKicker"></p><h1 class="s-title" id="sTitle"></h1></header>
-  <div class="s-body" id="sBody"></div>
-  <div class="s-foot" id="sFoot"><button class="btn big pri" id="sNext">Suivant</button></div>
-</main>
-
-<nav class="tabbar" id="tabbar" aria-label="Navigation">
-  <button class="tab" data-go="" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 12h2M8 8v8M12 5v14M16 9v6M20 12h0"/></svg>Aujourd'hui</button>
-  <button class="tab" data-go="preparer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 8.5h6M9 12h6M9 15.5h4"/></svg>Préparer</button>
-  <button class="tab" data-go="parler"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Parler</button>
-  <button class="tab" data-go="chant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>Chanter</button>
-  <button class="tab" data-go="parcours"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M21 19H3"/></svg>Parcours</button>
+<main class="screen wrap" id="view"></main>
+<nav class="tabbar" aria-label="Navigation">
+  <button class="tab" data-go="fond"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6h14M5 12h10M5 18h6"/></svg>Fond</button>
+  <button class="tab" data-go="voix"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Voix</button>
+  <button class="tab" data-go="corps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2"/><path d="M5 9l7 1.5L19 9M12 10.5V15M12 15l-3.5 6M12 15l3.5 6"/></svg>Corps</button>
+  <button class="tab" data-go="echange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h11a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" transform="translate(1 0)"/><path d="M19 9h1a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1v3l-4-3h-4"/></svg>Échange</button>
+  <button class="tab" data-go="mots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="13" height="16" rx="2"/><path d="M8 9h5M8 13h3M20 7v12a2 2 0 0 1-2 2H8"/></svg>Mots</button>
 </nav>
-
 <script src="content.js"></script>
 <script src="app.js"></script>
 </body>
