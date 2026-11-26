@@ -72,6 +72,8 @@ async function startMic() {
 }
 function loop() {
   if (!A.on) return;
+  if (nowS() - (A.lastT || 0) < .04) { requestAnimationFrame(loop); return }
+  A.lastT = nowS();
   A.an.getFloatTimeDomainData(A.buf);
   const t = nowS(); let rms = 0; for (let i = 0; i < A.buf.length; i++) rms += A.buf[i] * A.buf[i]; rms = Math.sqrt(rms / A.buf.length);
   let midi = null;
@@ -173,12 +175,29 @@ function pitchWidget(el, opts = {}) {
 }
 
 /* ============ Enregistrement ============ */
-async function recordInto(onAudio) {
-  if (typeof MediaRecorder === "undefined" || !(await startMic())) return null;
-  const chunks = []; const mr = new MediaRecorder(A.stream);
+/* Enregistrement : un flux à part, avec la réduction de bruit et l'égalisation du téléphone (comme un appel),
+   sans l'analyse de hauteur, qui n'est utile qu'aux exercices de mesure. */
+async function recordInto(onAudio, opts = {}) {
+  if (typeof MediaRecorder === "undefined") { micError = { name: "NoApi" }; return null }
+  let st;
+  try {
+    if (!window.isSecureContext) throw Object.assign(new Error("https"), { name: "Insecure" });
+    const raw = !!opts.raw;
+    try { st = await gUM({ audio: { echoCancellation: !raw, noiseSuppression: !raw, autoGainControl: !raw, channelCount: 1 } }) }
+    catch (e) { if (e.name === "OverconstrainedError" || e.name === "TypeError") st = await gUM({ audio: true }); else throw e }
+  } catch (e) { micError = e; return null }
+  const pick = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm"].find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t));
+  let mr;
+  try { mr = new MediaRecorder(st, Object.assign({ audioBitsPerSecond: 96000 }, pick ? { mimeType: pick } : {})) } catch (e) { mr = new MediaRecorder(st) }
+  const chunks = [];
   mr.ondataavailable = e => { if (e.data.size) chunks.push(e.data) };
-  mr.onstop = () => onAudio(URL.createObjectURL(new Blob(chunks, { type: mr.mimeType || "audio/webm" })));
+  mr.onstop = () => { st.getTracks().forEach(t => t.stop()); onAudio(URL.createObjectURL(new Blob(chunks, { type: mr.mimeType || "audio/webm" }))) };
   mr.start(); return { stop() { if (mr.state === "recording") mr.stop() } };
+}
+/* Coupe le micro d'analyse quand plus rien ne l'écoute */
+function releaseMic() {
+  if (A.fn.size || !A.stream) return;
+  A.on = false; A.stream.getTracks().forEach(t => t.stop()); A.stream = null;
 }
 function recorder(el, { max = 150, label = "Enregistrer" } = {}) {
   const box = document.createElement("div"); box.style.cssText = "display:flex;flex-direction:column;gap:8px";
@@ -353,7 +372,7 @@ function exVoice(spec) {
 /* ============ Exercices dans les fiches ============ */
 /* Petit contexte d'exécution : tout ce qui écoute le micro est arrêté quand on change d'écran. */
 const V = { tok: 0, clean: [] };
-function cleanup() { V.tok++; V.clean.forEach(f => { try { f() } catch (e) {} }); V.clean = []; try { speechSynthesis.cancel() } catch (e) {} }
+function cleanup() { V.tok++; V.clean.forEach(f => { try { f() } catch (e) {} }); V.clean = []; try { speechSynthesis.cancel() } catch (e) {} releaseMic() }
 function mkApi() {
   const tok = V.tok;
   return { alive: () => V.tok === tok, on(fn) { A.fn.add(fn); V.clean.push(() => A.fn.delete(fn)) }, off(fn) { A.fn.delete(fn) }, onClean(fn) { V.clean.push(fn) } };
@@ -602,6 +621,7 @@ function sectionHub(id) {
       ${cellLink("repere", "Repère", "En silence · trouve ce qui affaiblit une phrase" + (rpAvg != null ? ` · ${rpAvg} %` : ""), '<span class="chev">›</span>', '<div class="ic voix">◎</div>')}
       ${cellLink("euh", "Tes « euh »", "À voix haute · compte, puis refais" + (ds != null ? ` · ${ds === 0 ? "aujourd'hui" : ds === 1 ? "hier" : "il y a " + ds + " jours"}` : ""), '<span class="chev">›</span>', '<div class="ic voix">#</div>')}
       ${cellLink("essais", "Une phrase, trois essais", "À voix haute · le micro mesure, tu refais", '<span class="chev">›</span>', '<div class="ic voix">↻</div>')}
+      ${cellLink("micro", "Tester l'enregistrement", "Si un enregistrement grésille", '<span class="chev">›</span>', '<div class="ic n">✓</div>')}
     </div>${ds != null && ds >= 7 ? `<p class="foot-note">Une séance « Tes euh » de rappel ancre l'habitude : la dernière date de ${ds} jours.</p>` : ""}</div>`;
   }
   return "";
@@ -836,6 +856,33 @@ function renderDecouvrir() {
   $("#dkNext").onclick = renderDecouvrir;
 }
 
+/* ---- Tester l'enregistrement : comparer son traité et son brut ---- */
+function renderMicTest() {
+  cleanup(); const api = mkApi();
+  view.innerHTML = `
+    ${back("Voix", "voix")}
+    <header><h1 class="title">Tester l'enregistrement</h1><p class="sub">Pour savoir si un grésillement vient du téléphone ou de l'appli.</p></header>
+    <div class="card"><p class="label">1. Dans l'appli</p><p class="prose">Enregistre la même phrase deux fois, téléphone à 20 cm de la bouche, puis compare.</p>
+      <div class="row"><button class="btn pri sm" data-m="0">Son traité · 5 s</button><button class="btn sm" data-m="1">Son brut · 5 s</button></div>
+      <div id="mtA" class="stack"></div></div>
+    <div class="card"><p class="label">2. Hors de l'appli</p><p class="prose">Enregistre la même phrase avec l'appli Dictaphone ou Enregistreur de ton téléphone.</p></div>
+    <div class="card"><p class="label">Comment lire le résultat</p><ul class="ticks">
+      <li><b>Ça grésille aussi dans le Dictaphone</b> : ça vient du téléphone. Retire la coque, vérifie que le trou du micro (en bas) n'est pas bouché, redémarre le téléphone.</li>
+      <li><b>Seul le son brut grésille</b> : c'est la saturation du micro quand rien ne l'égalise. L'appli utilise maintenant le son traité pour tous les enregistrements.</li>
+      <li><b>Le son traité grésille aussi, mais pas le Dictaphone</b> : ça vient du navigateur. Dis-moi lequel tu utilises, je chercherai une autre solution.</li>
+    </ul></div>`;
+  bindLinks();
+  $$("[data-m]").forEach(b => b.onclick = async () => {
+    const raw = b.dataset.m === "1", out = $("#mtA");
+    $$("[data-m]").forEach(x => x.disabled = true);
+    const box = document.createElement("div"); box.innerHTML = `<p class="small"><b>${raw ? "Son brut" : "Son traité"}</b> · <span class="ck">● 5</span></p>`; out.appendChild(box);
+    const r = await recordInto(url => { if (!api.alive()) return; box.insertAdjacentHTML("beforeend", `<audio controls src="${url}"></audio>`); $$("[data-m]").forEach(x => x.disabled = false) }, { raw });
+    if (!r) { $$("[data-m]").forEach(x => x.disabled = false); box.remove(); micHelp(out, () => b.click()); return }
+    let n = 5; const iv = setInterval(() => { n--; box.querySelector(".ck").textContent = n > 0 ? "● " + n : "terminé"; if (n <= 0) { clearInterval(iv); r.stop() } }, 1000);
+    api.onClean(() => { clearInterval(iv); r.stop() });
+  });
+}
+
 /* ============ Navigation ============ */
 function bindLinks() { $$("#view [data-href]").forEach(b => b.onclick = () => { location.hash = b.dataset.href }) }
 function route() {
@@ -843,7 +890,7 @@ function route() {
   const h = location.hash.slice(1), [a, b, c, d] = h.split("/");
   if (a === "hasard") { location.replace("#f/" + randomFiche() + "/comprendre/h"); return }
   const rnd = a === "f" && d === "h";
-  const tabId = rnd ? "hasard" : THEMES.some(T => T.id === a) ? a : ["mots", "reviser", "ajouter", "paquet", "decouvrir"].includes(a) ? "mots" : a === "f" ? (findFiche(b) || { T: { id: "discours" } }).T.id : a === "cartes" ? "discours" : ["repere", "euh", "essais"].includes(a) ? "voix" : "discours";
+  const tabId = rnd ? "hasard" : THEMES.some(T => T.id === a) ? a : ["mots", "reviser", "ajouter", "paquet", "decouvrir"].includes(a) ? "mots" : a === "f" ? (findFiche(b) || { T: { id: "discours" } }).T.id : a === "cartes" ? "discours" : ["repere", "euh", "essais", "micro"].includes(a) ? "voix" : "discours";
   $$(".tab").forEach(t => t.setAttribute("aria-current", t.dataset.go === tabId ? "page" : "false"));
   const T = THEMES.find(T => T.id === a);
   if (a === "f") renderFiche(b, c, rnd);
@@ -851,6 +898,7 @@ function route() {
   else if (a === "repere") renderRepere();
   else if (a === "euh") renderEuh();
   else if (a === "essais") renderEssais();
+  else if (a === "micro") renderMicTest();
   else if (a === "mots") renderMots();
   else if (a === "decouvrir") renderDecouvrir();
   else if (a === "ajouter") renderAdd(b);
