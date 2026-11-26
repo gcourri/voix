@@ -609,10 +609,11 @@ function cardsDue() {
 function sectionHub(id) {
   if (id === "discours") {
     const d = cardsDue().n, known = CARDS.filter(c => S.dc[c.id] && S.dc[c.id].box >= 3).length;
-    return `<section class="hero drill">
-      <p class="label">S'entraîner</p><p class="drill-t">Cartes réflexes</p>
-      <p class="small muted">${d ? `<b>${d}</b> carte${d > 1 ? "s" : ""} à faire aujourd'hui` : "Rien à revoir aujourd'hui"} · ${known} sur ${CARDS.length} acquises</p>
-      <button class="btn big ${d ? "pri" : ""}" data-href="cartes">${d ? "Commencer" : "Réviser quand même"}</button></section>`;
+    const lq = S.qc[S.qc.length - 1];
+    return `<div><p class="section-label">S'entraîner</p><div class="group">
+      ${cellLink("cartes", "Cartes réflexes", (d ? `${d} carte${d > 1 ? "s" : ""} à faire aujourd'hui` : "Rien à revoir aujourd'hui") + ` · ${known} sur ${CARDS.length} acquises`, d ? `<span class="badge">${d}</span>` : '<span class="chev">›</span>', '<div class="ic parole">⇄</div>')}
+      ${cellLink("chaud", "Question à chaud", "Plan en 30 s, réponse enregistrée d'une minute" + (lq ? ` · dernière : ${lq.score}/6` : ""), '<span class="chev">›</span>', '<div class="ic parole">◷</div>')}
+    </div></div>`;
   }
   if (id === "voix") {
     const lastEu = S.eu[S.eu.length - 1], ds = lastEu ? daysSince(lastEu.d) : null;
@@ -883,6 +884,94 @@ function renderMicTest() {
   });
 }
 
+/* ---- Question à chaud : plan en 30 s, 1 minute enregistrée, réécoute avec grille, nouvel essai ---- */
+S.qc = S.qc || [];
+const QC_LISTS = ["QUICK", "AVIS", "PROJETS", "DEBATS"];
+const QC_CHECKS = [
+  ["Ma première phrase donnait ma conclusion.", "destination"],
+  ["J'ai annoncé mon plan (« deux points »).", "plan"],
+  ["Je m'y suis tenu, sans ajouter de point en route.", "plan"],
+  ["Mes phrases étaient courtes, et je les ai finies.", "phrase"],
+  ["Pas de « je pense que », « un peu », « peut-être », ni de « …, non ? ».", "doute"],
+  ["J'ai fini net, sur ma conclusion, sans « voilà ».", "boucler"]
+];
+const QC = { q: "", take: 0, plan: ["", "", ""], prev: null, url: null, dur: 0 };
+function renderQC(step) {
+  cleanup(); const api = mkApi();
+  if (step == null) { QC.q = pick(LISTS[pick(QC_LISTS)]); QC.take = 1; QC.prev = null; QC.plan = ["", "", ""]; step = 0 }
+  const head = `${back("Discours", "discours")}<header><h1 class="title">Question à chaud</h1><p class="sub">${QC.take > 1 ? "Nouvel essai, même question : corrige un seul point." : "Une question imprévue, 30 secondes pour un plan, 1 minute pour répondre."}</p></header>`;
+  const qBox = `<div class="card"><p class="label">Question</p><p class="topic" id="qcQ">${esc(QC.q)}</p>${step === 0 && QC.take === 1 ? '<button class="btn ghost sm" id="qcOther">Une autre question</button>' : ""}</div>`;
+  if (step === 0) {
+    view.innerHTML = `${head}${qBox}<button class="btn big pri" id="qcGo">Préparer mon plan · 30 s</button>`;
+    bindLinks();
+    const o = $("#qcOther"); if (o) o.onclick = () => { QC.q = pick(LISTS[pick(QC_LISTS)]); $("#qcQ").textContent = QC.q };
+    $("#qcGo").onclick = () => renderQC(1);
+    return;
+  }
+  if (step === 1) {
+    view.innerHTML = `${head}${qBox}
+      <div class="card"><div class="timer"><span class="clock" id="qcClk">0:30</span><span class="small muted">Des mots-clés, pas des phrases</span></div>
+      <div class="fields"><label>Ma conclusion<input id="qp0" autocomplete="off" value="${esc(QC.plan[0])}"></label><label>Point 1<input id="qp1" autocomplete="off" value="${esc(QC.plan[1])}"></label><label>Point 2<input id="qp2" autocomplete="off" value="${esc(QC.plan[2])}"></label></div></div>
+      <button class="btn big pri" id="qcReady">Je suis prêt, j'enregistre</button>`;
+    bindLinks();
+    const t0 = nowS(); let done = false;
+    const go = () => { if (done) return; done = true; clearInterval(iv); QC.plan = [0, 1, 2].map(k => $("#qp" + k).value.trim()); renderQC(2) };
+    const iv = setInterval(() => { const s = 30 - (nowS() - t0); $("#qcClk").textContent = fmt(s); if (s <= 5) $("#qcClk").style.color = "var(--off)"; if (s <= 0) { beep(); go() } }, 200);
+    api.onClean(() => clearInterval(iv));
+    $("#qcReady").onclick = go;
+    return;
+  }
+  if (step === 2) {
+    const pl = QC.plan.filter(Boolean);
+    view.innerHTML = `${head}${qBox}
+      ${pl.length ? `<div class="card"><p class="label">Ton plan</p>${QC.plan[0] ? `<p class="keep">${esc(QC.plan[0])}</p>` : ""}${QC.plan.slice(1).filter(Boolean).map((p, i) => `<p class="small">${i + 1}. ${esc(p)}</p>`).join("")}</div>` : ""}
+      <div class="card"><div class="timer"><span class="clock" id="qcClk">1:00</span><button class="btn pri" id="qcStop">J'ai fini</button></div><p class="small muted" id="qcHint">Démarrage de l'enregistrement…</p></div>`;
+    bindLinks();
+    let r = null, t0 = 0, iv = null, stopped = false;
+    const stop = () => { if (stopped) return; stopped = true; clearInterval(iv); QC.dur = Math.max(5, nowS() - t0); if (r) r.stop() };
+    (async () => {
+      r = await recordInto(url => { if (!api.alive()) return; QC.url = url; renderQC(3) });
+      if (!api.alive()) { if (r) r.stop(); return }
+      if (!r) { micHelp(view, () => renderQC(2)); return }
+      t0 = nowS(); $("#qcHint").textContent = "Enregistrement en cours. Commence par ta conclusion.";
+      iv = setInterval(() => { const s = 60 - (nowS() - t0); $("#qcClk").textContent = fmt(s); if (s <= 10) $("#qcClk").style.color = "var(--off)"; if (s <= 0) { beep(); stop() } }, 200);
+    })();
+    api.onClean(() => { clearInterval(iv); if (r && !stopped) r.stop() });
+    $("#qcStop").onclick = stop;
+    return;
+  }
+  if (step === 3) {
+    const ans = QC_CHECKS.map(() => null); let euh = 0;
+    view.innerHTML = `${head}
+      <div class="card"><p class="label">Réécoute-toi en entier</p><audio controls src="${QC.url}"></audio>
+      <button class="counter" id="qcEuh" style="margin-top:4px"><b>0</b><span>touche à chaque « euh » ou reprise</span></button></div>
+      <div class="card" id="qcGrid"><p class="label">Puis réponds honnêtement</p>${QC_CHECKS.map((c, k) => `<div class="yn-row" data-k="${k}"><span>${c[0]}</span><div class="yn2"><button data-v="0">Non</button><button data-v="1">Oui</button></div></div>`).join("")}</div>
+      <button class="btn big pri" id="qcVal" disabled>Valider</button>`;
+    bindLinks();
+    $("#qcEuh").onclick = () => { euh++; $("#qcEuh b").textContent = euh };
+    const val = $("#qcVal");
+    $$("#qcGrid .yn-row").forEach(row => row.querySelectorAll("button").forEach(b => b.onclick = () => {
+      ans[+row.dataset.k] = b.dataset.v === "1"; row.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); val.disabled = ans.some(a => a === null);
+    }));
+    val.onclick = () => {
+      const score = ans.filter(Boolean).length, rate = Math.round(euh / (QC.dur / 60) * 10) / 10;
+      const res = { d: today(), score, euh: rate, take: QC.take };
+      S.qc = S.qc.concat(res).slice(-100); save();
+      const prev = QC.prev; QC.prev = res;
+      const weak = [...new Set(QC_CHECKS.filter((c, k) => !ans[k]).map(c => c[1]))];
+      view.innerHTML = `${head}
+        <div class="stats"><div class="stat"><b>${score}/${QC_CHECKS.length}</b><span>critères réussis${prev ? ` · avant : ${prev.score}/${QC_CHECKS.length}` : ""}</span></div><div class="stat"><b>${f1(rate)}</b><span>« euh » par minute${prev ? ` · avant : ${f1(prev.euh)}` : ""}</span></div></div>
+        ${weak.length ? `<div><p class="section-label">À travailler</p><div class="group">${weak.map(f => cellLink("f/" + f, esc(ftitle(f)), "Relire la fiche")).join("")}</div></div>` : `<div class="card"><p class="prose">Tous les critères sont réussis. Prochaine étape : une question plus difficile, ou moins de préparation.</p></div>`}
+        ${QC.take === 1 ? `<button class="btn big pri" id="qcRetry">Refaire la même question</button>` : ""}
+        <div class="pair"><button class="btn big" data-href="discours">Terminer</button><button class="btn big ${QC.take === 1 ? "" : "pri"}" id="qcNew">Une autre question</button></div>
+        ${QC.take === 1 ? `<p class="foot-note" style="text-align:center">Refaire tout de suite, en corrigeant un seul point, c'est là qu'on progresse le plus.</p>` : ""}`;
+      bindLinks();
+      const rt = $("#qcRetry"); if (rt) rt.onclick = () => { QC.take = 2; renderQC(1) };
+      $("#qcNew").onclick = () => renderQC();
+    };
+  }
+}
+
 /* ============ Navigation ============ */
 function bindLinks() { $$("#view [data-href]").forEach(b => b.onclick = () => { location.hash = b.dataset.href }) }
 function route() {
@@ -890,11 +979,12 @@ function route() {
   const h = location.hash.slice(1), [a, b, c, d] = h.split("/");
   if (a === "hasard") { location.replace("#f/" + randomFiche() + "/comprendre/h"); return }
   const rnd = a === "f" && d === "h";
-  const tabId = rnd ? "hasard" : THEMES.some(T => T.id === a) ? a : ["mots", "reviser", "ajouter", "paquet", "decouvrir"].includes(a) ? "mots" : a === "f" ? (findFiche(b) || { T: { id: "discours" } }).T.id : a === "cartes" ? "discours" : ["repere", "euh", "essais", "micro"].includes(a) ? "voix" : "discours";
+  const tabId = rnd ? "hasard" : THEMES.some(T => T.id === a) ? a : ["mots", "reviser", "ajouter", "paquet", "decouvrir"].includes(a) ? "mots" : a === "f" ? (findFiche(b) || { T: { id: "discours" } }).T.id : (a === "cartes" || a === "chaud") ? "discours" : ["repere", "euh", "essais", "micro"].includes(a) ? "voix" : "discours";
   $$(".tab").forEach(t => t.setAttribute("aria-current", t.dataset.go === tabId ? "page" : "false"));
   const T = THEMES.find(T => T.id === a);
   if (a === "f") renderFiche(b, c, rnd);
   else if (a === "cartes") startCards();
+  else if (a === "chaud") renderQC();
   else if (a === "repere") renderRepere();
   else if (a === "euh") renderEuh();
   else if (a === "essais") renderEssais();
