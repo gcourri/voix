@@ -17,7 +17,7 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 const nowS = () => performance.now() / 1000;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const f1 = v => (Math.round(v * 10) / 10).toString().replace(".", ",");
-const { LISTS, THEMES, VOCAB, PARLER_TEXTS, CARDS, REPERE, ESSAIS, DECOUVRIR } = window;
+const { LISTS, THEMES, VOCAB, PARLER_TEXTS, CARDS, REPERE, ESSAIS, DECOUVRIR, SITUATIONS } = window;
 THEMES.forEach(T => { if (!T.groups) T.groups = [{ t: null, fiches: T.fiches }]; T.fiches = T.groups.flatMap(g => g.fiches.map(f => Object.assign(f, { g: g.t }))) });
 
 /* ============ Notes ============ */
@@ -182,7 +182,7 @@ async function recordInto(onAudio, opts = {}) {
   let st;
   try {
     if (!window.isSecureContext) throw Object.assign(new Error("https"), { name: "Insecure" });
-    const raw = !!opts.raw;
+    const raw = opts.raw !== false;
     try { st = await gUM({ audio: { echoCancellation: !raw, noiseSuppression: !raw, autoGainControl: !raw, channelCount: 1 } }) }
     catch (e) { if (e.name === "OverconstrainedError" || e.name === "TypeError") st = await gUM({ audio: true }); else throw e }
   } catch (e) { micError = e; return null }
@@ -612,18 +612,16 @@ function sectionHub(id) {
     const lq = S.qc[S.qc.length - 1];
     return `<div><p class="section-label">S'entraîner</p><div class="group">
       ${cellLink("cartes", "Cartes réflexes", (d ? `${d} carte${d > 1 ? "s" : ""} à faire aujourd'hui` : "Rien à revoir aujourd'hui") + ` · ${known} sur ${CARDS.length} acquises`, d ? `<span class="badge">${d}</span>` : '<span class="chev">›</span>', '<div class="ic parole">⇄</div>')}
-      ${cellLink("chaud", "Question à chaud", "Plan en 30 s, réponse enregistrée d'une minute" + (lq ? ` · dernière : ${lq.score}/6` : ""), '<span class="chev">›</span>', '<div class="ic parole">◷</div>')}
-    </div></div>`;
+      ${cellLink("chaud", "Question à chaud", "Une situation, tu réponds direct, tu te réécoutes" + (lq ? ` · dernière : ${lq.score}/${lq.tot || 6}` : ""), '<span class="chev">›</span>', '<div class="ic parole">◷</div>')}
+    </div>${qcReminder() ? `<p class="foot-note">Dernière question à chaud il y a ${qcReminder()} jours : une séance de rappel aide à garder l'habitude.</p>` : ""}</div>`;
   }
   if (id === "voix") {
-    const lastEu = S.eu[S.eu.length - 1], ds = lastEu ? daysSince(lastEu.d) : null;
     const rpAvg = S.rp.length ? Math.round(mean(S.rp.slice(-10))) : null;
     return `<div><p class="section-label">S'entraîner</p><div class="group">
       ${cellLink("repere", "Repère", "En silence · trouve ce qui affaiblit une phrase" + (rpAvg != null ? ` · ${rpAvg} %` : ""), '<span class="chev">›</span>', '<div class="ic voix">◎</div>')}
-      ${cellLink("euh", "Tes « euh »", "À voix haute · compte, puis refais" + (ds != null ? ` · ${ds === 0 ? "aujourd'hui" : ds === 1 ? "hier" : "il y a " + ds + " jours"}` : ""), '<span class="chev">›</span>', '<div class="ic voix">#</div>')}
       ${cellLink("essais", "Une phrase, trois essais", "À voix haute · le micro mesure, tu refais", '<span class="chev">›</span>', '<div class="ic voix">↻</div>')}
       ${cellLink("micro", "Tester l'enregistrement", "Si un enregistrement grésille", '<span class="chev">›</span>', '<div class="ic n">✓</div>')}
-    </div>${ds != null && ds >= 7 ? `<p class="foot-note">Une séance « Tes euh » de rappel ancre l'habitude : la dernière date de ${ds} jours.</p>` : ""}</div>`;
+    </div></div>`;
   }
   return "";
 }
@@ -731,60 +729,6 @@ function renderRepere() {
   };
 }
 
-/* ---- Tes « euh » : enregistrer, compter, refaire (inversion d'habitude) ---- */
-const EU = { step: 0, q: "", takes: [] };
-function renderEuh(step) {
-  cleanup(); const api = mkApi();
-  if (step == null) { EU.step = 0; EU.q = pick(LISTS.QUICK); EU.takes = [] } else EU.step = step;
-  const n = EU.takes.length, s = EU.step;
-  const head = `${back("Voix", "voix")}<header><h1 class="title">Tes « euh »</h1><p class="sub">${s < 2 ? "Prise 1 : parle naturellement." : s < 4 ? "Prise 2 : même question. À chaque « euh » qui arrive, ferme la bouche et fais une pause." : "Résultat"}</p></header>`;
-  if (s === 0 || s === 2) {
-    view.innerHTML = `${head}
-      <div class="card"><p class="label">Question</p><p class="topic" id="euQ">${esc(EU.q)}</p>${s === 0 ? '<button class="btn ghost sm" id="euOther">Une autre question</button>' : ""}</div>
-      <div class="card"><div class="timer"><span class="clock" id="euClk">0:30</span><button class="btn pri" id="euGo">M'enregistrer</button></div><p class="small muted">30 secondes au plus.</p></div>`;
-    bindLinks();
-    const o = $("#euOther"); if (o) o.onclick = () => { EU.q = pick(LISTS.QUICK); $("#euQ").textContent = EU.q };
-    let r = null, t0 = 0, iv = null;
-    const stop = () => { if (!r) return; r.stop(); r = null; clearInterval(iv); EU.cur.dur = Math.max(3, nowS() - t0) };
-    $("#euGo").onclick = async () => {
-      if (r) { stop(); return }
-      EU.cur = { url: null, dur: 0 };
-      r = await recordInto(url => { if (!api.alive()) return; EU.cur.url = url; EU.takes.push(EU.cur); renderEuh(s + 1) });
-      if (!r) { micHelp(view, () => $("#euGo").click()); return }
-      t0 = nowS(); $("#euGo").textContent = "Arrêter";
-      iv = setInterval(() => { const e = nowS() - t0; $("#euClk").textContent = fmt(30 - e); if (e >= 30) stop() }, 200);
-      api.onClean(() => { clearInterval(iv); if (r) r.stop() });
-    };
-    return;
-  }
-  if (s === 1 || s === 3) {
-    const t = EU.takes[n - 1]; t.euh = t.euh || 0; t.att = t.att || 0;
-    view.innerHTML = `${head}
-      <div class="card"><p class="label">Réécoute ta prise ${n}, et touche à chaque fois que tu entends…</p><audio controls src="${t.url}"></audio></div>
-      <div class="counters"><button class="counter" id="cE"><b>${t.euh}</b><span>« euh », reprise</span></button><button class="counter" id="cA"><b>${t.att}</b><span>atténuation, tic</span></button></div>
-      <button class="btn ghost sm" id="cUndo">Annuler la dernière touche</button>
-      <button class="btn big pri" id="euNext">${s === 1 ? "Refaire la même question" : "Voir le résultat"}</button>`;
-    bindLinks();
-    const hist = [];
-    const upd = () => { $("#cE b").textContent = t.euh; $("#cA b").textContent = t.att };
-    $("#cE").onclick = () => { t.euh++; hist.push("euh"); upd() };
-    $("#cA").onclick = () => { t.att++; hist.push("att"); upd() };
-    $("#cUndo").onclick = () => { const h = hist.pop(); if (h) { t[h] = Math.max(0, t[h] - 1); upd() } };
-    $("#euNext").onclick = () => renderEuh(s + 1);
-    return;
-  }
-  const pm = t => Math.round((t.euh + t.att) / (t.dur / 60) * 10) / 10;
-  const a = EU.takes[0], b = EU.takes[1], ra = pm(a), rb = pm(b);
-  S.eu = S.eu.concat({ d: today(), a: ra, b: rb }).slice(-100); save();
-  const h = S.eu.slice(-8);
-  view.innerHTML = `${head}
-    <div class="stats"><div class="stat"><b>${f1(ra)}</b><span>par minute · prise 1</span></div><div class="stat"><b>${f1(rb)}</b><span>par minute · prise 2</span></div></div>
-    <div class="card"><p class="prose">${rb < ra ? "Moins d'hésitations dès le deuxième essai : c'est le geste de remplacement qui s'installe." : rb === ra ? "Même niveau : la prochaine fois, ralentis juste avant chaque nouvelle idée, c'est là que le « euh » arrive." : "Plus d'hésitations en prise 2 : c'est normal au début, l'attention perturbe. Continue, l'habitude se met en place en quelques séances."}</p></div>
-    ${h.length > 1 ? `<div><p class="section-label">Tes dernières séances · prise 1</p><div class="spark">${h.map(x => { const mx = Math.max(...h.map(y => y.a), 1); return `<i style="height:${Math.max(6, x.a / mx * 100)}%" title="${f1(x.a)}"></i>` }).join("")}</div><p class="foot-note">Le chiffre qui compte : ta prise 1, celle qui ressemble à ta parole spontanée.</p></div>` : ""}
-    <div class="pair"><button class="btn big" data-href="voix">Terminer</button><button class="btn big pri" id="euAgain">Une autre question</button></div>`;
-  bindLinks(); $("#euAgain").onclick = () => renderEuh();
-}
-
 /* ---- Une phrase, trois essais : mesurer, refaire, garder le meilleur ---- */
 const ES = { last: -1 };
 function renderEssais() {
@@ -864,12 +808,12 @@ function renderMicTest() {
     ${back("Voix", "voix")}
     <header><h1 class="title">Tester l'enregistrement</h1><p class="sub">Pour savoir si un grésillement vient du téléphone ou de l'appli.</p></header>
     <div class="card"><p class="label">1. Dans l'appli</p><p class="prose">Enregistre la même phrase deux fois, téléphone à 20 cm de la bouche, puis compare.</p>
-      <div class="row"><button class="btn pri sm" data-m="0">Son traité · 5 s</button><button class="btn sm" data-m="1">Son brut · 5 s</button></div>
+      <div class="row"><button class="btn pri sm" data-m="1">Son brut · 5 s</button><button class="btn sm" data-m="0">Son traité · 5 s</button></div>
       <div id="mtA" class="stack"></div></div>
     <div class="card"><p class="label">2. Hors de l'appli</p><p class="prose">Enregistre la même phrase avec l'appli Dictaphone ou Enregistreur de ton téléphone.</p></div>
     <div class="card"><p class="label">Comment lire le résultat</p><ul class="ticks">
       <li><b>Ça grésille aussi dans le Dictaphone</b> : ça vient du téléphone. Retire la coque, vérifie que le trou du micro (en bas) n'est pas bouché, redémarre le téléphone.</li>
-      <li><b>Seul le son brut grésille</b> : c'est la saturation du micro quand rien ne l'égalise. L'appli utilise maintenant le son traité pour tous les enregistrements.</li>
+      <li><b>Seul le son brut grésille</b> : c'est la saturation du micro. Éloigne un peu le téléphone de ta bouche ; si ça persiste, dis-le-moi et je repasse l'appli en son traité.</li>
       <li><b>Le son traité grésille aussi, mais pas le Dictaphone</b> : ça vient du navigateur. Dis-moi lequel tu utilises, je chercherai une autre solution.</li>
     </ul></div>`;
   bindLinks();
@@ -877,94 +821,92 @@ function renderMicTest() {
     const raw = b.dataset.m === "1", out = $("#mtA");
     $$("[data-m]").forEach(x => x.disabled = true);
     const box = document.createElement("div"); box.innerHTML = `<p class="small"><b>${raw ? "Son brut" : "Son traité"}</b> · <span class="ck">● 5</span></p>`; out.appendChild(box);
-    const r = await recordInto(url => { if (!api.alive()) return; box.insertAdjacentHTML("beforeend", `<audio controls src="${url}"></audio>`); $$("[data-m]").forEach(x => x.disabled = false) }, { raw });
+    const r = await recordInto(url => { if (!api.alive()) return; box.insertAdjacentHTML("beforeend", `<audio controls src="${url}"></audio>`); $$("[data-m]").forEach(x => x.disabled = false) }, { raw: raw });
     if (!r) { $$("[data-m]").forEach(x => x.disabled = false); box.remove(); micHelp(out, () => b.click()); return }
     let n = 5; const iv = setInterval(() => { n--; box.querySelector(".ck").textContent = n > 0 ? "● " + n : "terminé"; if (n <= 0) { clearInterval(iv); r.stop() } }, 1000);
     api.onClean(() => { clearInterval(iv); r.stop() });
   });
 }
 
-/* ---- Question à chaud : plan en 30 s, 1 minute enregistrée, réécoute avec grille, nouvel essai ---- */
+/* ---- Question à chaud : une situation, tu réponds direct (enregistré), tu réécoutes, tu comptes, tu refais ---- */
 S.qc = S.qc || [];
-const QC_LISTS = ["QUICK", "AVIS", "PROJETS", "DEBATS"];
 const QC_CHECKS = [
-  ["Ma première phrase donnait ma conclusion.", "destination"],
-  ["J'ai annoncé mon plan (« deux points »).", "plan"],
-  ["Je m'y suis tenu, sans ajouter de point en route.", "plan"],
+  ["Ma première phrase donnait ma réponse, ou ma conclusion.", "destination"],
+  ["J'ai annoncé un plan, même court (« deux raisons »).", "plan"],
   ["Mes phrases étaient courtes, et je les ai finies.", "phrase"],
   ["Pas de « je pense que », « un peu », « peut-être », ni de « …, non ? ».", "doute"],
-  ["J'ai fini net, sur ma conclusion, sans « voilà ».", "boucler"]
+  ["J'ai fini net, sans « voilà » ni ajout.", "boucler"]
 ];
-const QC = { q: "", take: 0, plan: ["", "", ""], prev: null, url: null, dur: 0 };
+const QC = { s: null, last: null, take: 1, prev: null, url: null, dur: 0 };
+const pickSituation = () => { let s; do { s = pick(SITUATIONS) } while (s === QC.last && SITUATIONS.length > 1); QC.last = s; return s };
+function qcReminder() { const l = S.qc[S.qc.length - 1]; const d = l ? daysSince(l.d) : null; return d != null && d >= 7 ? d : null }
+
 function renderQC(step) {
   cleanup(); const api = mkApi();
-  if (step == null) { QC.q = pick(LISTS[pick(QC_LISTS)]); QC.take = 1; QC.prev = null; QC.plan = ["", "", ""]; step = 0 }
-  const head = `${back("Discours", "discours")}<header><h1 class="title">Question à chaud</h1><p class="sub">${QC.take > 1 ? "Nouvel essai, même question : corrige un seul point." : "Une question imprévue, 30 secondes pour un plan, 1 minute pour répondre."}</p></header>`;
-  const qBox = `<div class="card"><p class="label">Question</p><p class="topic" id="qcQ">${esc(QC.q)}</p>${step === 0 && QC.take === 1 ? '<button class="btn ghost sm" id="qcOther">Une autre question</button>' : ""}</div>`;
+  if (step == null) { QC.s = pickSituation(); QC.take = 1; QC.prev = null; step = 0 }
+  const s = QC.s;
+  const head = `${back("Discours", "discours")}<header><h1 class="title">Question à chaud</h1><p class="sub">${QC.take > 1 ? "Même question : corrige un seul point." : "Lis, puis réponds tout de suite. Pas de plan écrit : structure en parlant."}</p></header>`;
+  const sit = `<div class="card">${s.c ? `<p class="label">La situation</p><p class="prose">${esc(s.c)}</p>` : ""}<p class="label"${s.c ? ' style="margin-top:4px"' : ""}>On te demande</p><p class="topic">« ${esc(s.q)} »</p>${step === 0 && QC.take === 1 ? '<button class="btn ghost sm" id="qcOther">Une autre situation</button>' : ""}</div>`;
   if (step === 0) {
-    view.innerHTML = `${head}${qBox}<button class="btn big pri" id="qcGo">Préparer mon plan · 30 s</button>`;
+    view.innerHTML = `${head}${sit}<button class="btn big pri" id="qcGo">Je réponds · ça enregistre</button><p class="foot-note" style="text-align:center">1 minute au plus. Tu peux t'arrêter avant.</p>`;
     bindLinks();
-    const o = $("#qcOther"); if (o) o.onclick = () => { QC.q = pick(LISTS[pick(QC_LISTS)]); $("#qcQ").textContent = QC.q };
+    const o = $("#qcOther"); if (o) o.onclick = () => renderQC();
     $("#qcGo").onclick = () => renderQC(1);
     return;
   }
   if (step === 1) {
-    view.innerHTML = `${head}${qBox}
-      <div class="card"><div class="timer"><span class="clock" id="qcClk">0:30</span><span class="small muted">Des mots-clés, pas des phrases</span></div>
-      <div class="fields"><label>Ma conclusion<input id="qp0" autocomplete="off" value="${esc(QC.plan[0])}"></label><label>Point 1<input id="qp1" autocomplete="off" value="${esc(QC.plan[1])}"></label><label>Point 2<input id="qp2" autocomplete="off" value="${esc(QC.plan[2])}"></label></div></div>
-      <button class="btn big pri" id="qcReady">Je suis prêt, j'enregistre</button>`;
-    bindLinks();
-    const t0 = nowS(); let done = false;
-    const go = () => { if (done) return; done = true; clearInterval(iv); QC.plan = [0, 1, 2].map(k => $("#qp" + k).value.trim()); renderQC(2) };
-    const iv = setInterval(() => { const s = 30 - (nowS() - t0); $("#qcClk").textContent = fmt(s); if (s <= 5) $("#qcClk").style.color = "var(--off)"; if (s <= 0) { beep(); go() } }, 200);
-    api.onClean(() => clearInterval(iv));
-    $("#qcReady").onclick = go;
-    return;
-  }
-  if (step === 2) {
-    const pl = QC.plan.filter(Boolean);
-    view.innerHTML = `${head}${qBox}
-      ${pl.length ? `<div class="card"><p class="label">Ton plan</p>${QC.plan[0] ? `<p class="keep">${esc(QC.plan[0])}</p>` : ""}${QC.plan.slice(1).filter(Boolean).map((p, i) => `<p class="small">${i + 1}. ${esc(p)}</p>`).join("")}</div>` : ""}
-      <div class="card"><div class="timer"><span class="clock" id="qcClk">1:00</span><button class="btn pri" id="qcStop">J'ai fini</button></div><p class="small muted" id="qcHint">Démarrage de l'enregistrement…</p></div>`;
+    view.innerHTML = `${head}${sit}<div class="card"><div class="timer"><span class="clock" id="qcClk">1:00</span><button class="btn pri" id="qcStop">J'ai fini</button></div><p class="small muted" id="qcHint">Démarrage…</p></div>`;
     bindLinks();
     let r = null, t0 = 0, iv = null, stopped = false;
     const stop = () => { if (stopped) return; stopped = true; clearInterval(iv); QC.dur = Math.max(5, nowS() - t0); if (r) r.stop() };
+    $("#qcStop").onclick = stop;
     (async () => {
-      r = await recordInto(url => { if (!api.alive()) return; QC.url = url; renderQC(3) });
+      r = await recordInto(url => { if (!api.alive()) return; QC.url = url; renderQC(2) });
       if (!api.alive()) { if (r) r.stop(); return }
-      if (!r) { micHelp(view, () => renderQC(2)); return }
-      t0 = nowS(); $("#qcHint").textContent = "Enregistrement en cours. Commence par ta conclusion.";
-      iv = setInterval(() => { const s = 60 - (nowS() - t0); $("#qcClk").textContent = fmt(s); if (s <= 10) $("#qcClk").style.color = "var(--off)"; if (s <= 0) { beep(); stop() } }, 200);
+      if (!r) { micHelp(view, () => renderQC(1)); return }
+      t0 = nowS(); $("#qcHint").textContent = "Ça enregistre. Vas-y.";
+      iv = setInterval(() => { const x = 60 - (nowS() - t0); $("#qcClk").textContent = fmt(x); if (x <= 10) $("#qcClk").style.color = "var(--off)"; if (x <= 0) { beep(); stop() } }, 200);
     })();
     api.onClean(() => { clearInterval(iv); if (r && !stopped) r.stop() });
-    $("#qcStop").onclick = stop;
     return;
   }
-  if (step === 3) {
-    const ans = QC_CHECKS.map(() => null); let euh = 0;
+  if (step === 2) {
+    const n = { euh: 0, tic: 0, souffle: 0 }, hist = [], ans = QC_CHECKS.map(() => null);
     view.innerHTML = `${head}
-      <div class="card"><p class="label">Réécoute-toi en entier</p><audio controls src="${QC.url}"></audio>
-      <button class="counter" id="qcEuh" style="margin-top:4px"><b>0</b><span>touche à chaque « euh » ou reprise</span></button></div>
-      <div class="card" id="qcGrid"><p class="label">Puis réponds honnêtement</p>${QC_CHECKS.map((c, k) => `<div class="yn-row" data-k="${k}"><span>${c[0]}</span><div class="yn2"><button data-v="0">Non</button><button data-v="1">Oui</button></div></div>`).join("")}</div>
+      <div class="card"><p class="label">1. Réécoute-toi, et touche à chaque fois que tu entends…</p><audio controls src="${QC.url}"></audio>
+        <div class="counters three"><button class="counter" data-n="euh"><b>0</b><span>« euh », reprise</span></button><button class="counter" data-n="tic"><b>0</b><span>tic, atténuation</span></button><button class="counter" data-n="souffle"><b>0</b><span>respiration ratée</span></button></div>
+        <button class="btn ghost sm" id="qcUndo">Annuler la dernière touche</button></div>
+      <div class="card" id="qcGrid"><p class="label">2. Puis réponds honnêtement</p>${QC_CHECKS.map((c, k) => `<div class="yn-row" data-k="${k}"><span>${c[0]}</span><div class="yn2"><button data-v="0">Non</button><button data-v="1">Oui</button></div></div>`).join("")}</div>
       <button class="btn big pri" id="qcVal" disabled>Valider</button>`;
     bindLinks();
-    $("#qcEuh").onclick = () => { euh++; $("#qcEuh b").textContent = euh };
+    const upd = () => $$(".counter[data-n]").forEach(b => b.querySelector("b").textContent = n[b.dataset.n]);
+    $$(".counter[data-n]").forEach(b => b.onclick = () => { n[b.dataset.n]++; hist.push(b.dataset.n); upd() });
+    $("#qcUndo").onclick = () => { const h = hist.pop(); if (h) { n[h] = Math.max(0, n[h] - 1); upd() } };
     const val = $("#qcVal");
     $$("#qcGrid .yn-row").forEach(row => row.querySelectorAll("button").forEach(b => b.onclick = () => {
       ans[+row.dataset.k] = b.dataset.v === "1"; row.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); val.disabled = ans.some(a => a === null);
     }));
     val.onclick = () => {
-      const score = ans.filter(Boolean).length, rate = Math.round(euh / (QC.dur / 60) * 10) / 10;
-      const res = { d: today(), score, euh: rate, take: QC.take };
-      S.qc = S.qc.concat(res).slice(-100); save();
+      const min = QC.dur / 60, per = x => Math.round(x / min * 10) / 10;
+      const res = { d: today(), score: ans.filter(Boolean).length, tot: QC_CHECKS.length, euh: per(n.euh), tic: per(n.tic), souffle: n.souffle, take: QC.take };
+      S.qc = S.qc.concat(res).slice(-150); save();
       const prev = QC.prev; QC.prev = res;
-      const weak = [...new Set(QC_CHECKS.filter((c, k) => !ans[k]).map(c => c[1]))];
+      const weak = [...new Set(QC_CHECKS.filter((c, k) => !ans[k]).map(c => c[1]).concat(n.souffle ? ["souffle"] : []))];
+      const firsts = S.qc.filter(x => x.take === 1).slice(-10);
+      const mx = Math.max(1, ...firsts.map(x => x.euh + (x.tic || 0)));
+      const cmp = (v, p) => p == null ? "" : ` · avant : ${p}`;
       view.innerHTML = `${head}
-        <div class="stats"><div class="stat"><b>${score}/${QC_CHECKS.length}</b><span>critères réussis${prev ? ` · avant : ${prev.score}/${QC_CHECKS.length}` : ""}</span></div><div class="stat"><b>${f1(rate)}</b><span>« euh » par minute${prev ? ` · avant : ${f1(prev.euh)}` : ""}</span></div></div>
-        ${weak.length ? `<div><p class="section-label">À travailler</p><div class="group">${weak.map(f => cellLink("f/" + f, esc(ftitle(f)), "Relire la fiche")).join("")}</div></div>` : `<div class="card"><p class="prose">Tous les critères sont réussis. Prochaine étape : une question plus difficile, ou moins de préparation.</p></div>`}
+        <div class="stats">
+          <div class="stat"><b>${res.score}/${res.tot}</b><span>critères de structure${cmp(0, prev && prev.score + "/" + prev.tot)}</span></div>
+          <div class="stat"><b>${f1(res.euh)}</b><span>« euh » par minute${cmp(0, prev && f1(prev.euh))}</span></div>
+          <div class="stat"><b>${f1(res.tic)}</b><span>tics par minute${cmp(0, prev && f1(prev.tic))}</span></div>
+          <div class="stat"><b>${res.souffle}</b><span>respiration${res.souffle > 1 ? "s" : ""} ratée${res.souffle > 1 ? "s" : ""}${cmp(0, prev && prev.souffle)}</span></div>
+        </div>
+        ${QC.take === 1 && firsts.length > 1 ? `<div><p class="section-label">« Euh » et tics par minute, tes dernières questions</p><div class="spark">${firsts.map(x => `<i style="height:${Math.max(6, (x.euh + (x.tic || 0)) / mx * 100)}%"></i>`).join("")}</div></div>` : ""}
+        ${weak.length ? `<div><p class="section-label">À travailler</p><div class="group">${weak.map(f => cellLink("f/" + f, esc(ftitle(f)), "Relire la fiche")).join("")}</div></div>` : `<div class="card"><p class="prose">Tous les critères sont réussis. Garde ce niveau sur une situation plus difficile.</p></div>`}
         ${QC.take === 1 ? `<button class="btn big pri" id="qcRetry">Refaire la même question</button>` : ""}
-        <div class="pair"><button class="btn big" data-href="discours">Terminer</button><button class="btn big ${QC.take === 1 ? "" : "pri"}" id="qcNew">Une autre question</button></div>
-        ${QC.take === 1 ? `<p class="foot-note" style="text-align:center">Refaire tout de suite, en corrigeant un seul point, c'est là qu'on progresse le plus.</p>` : ""}`;
+        <div class="pair"><button class="btn big" data-href="discours">Terminer</button><button class="btn big ${QC.take === 1 ? "" : "pri"}" id="qcNew">Une autre situation</button></div>
+        ${QC.take === 1 ? `<p class="foot-note" style="text-align:center">Refaire tout de suite en corrigeant un seul point : c'est là qu'on progresse le plus.</p>` : ""}`;
       bindLinks();
       const rt = $("#qcRetry"); if (rt) rt.onclick = () => { QC.take = 2; renderQC(1) };
       $("#qcNew").onclick = () => renderQC();
@@ -979,14 +921,14 @@ function route() {
   const h = location.hash.slice(1), [a, b, c, d] = h.split("/");
   if (a === "hasard") { location.replace("#f/" + randomFiche() + "/comprendre/h"); return }
   const rnd = a === "f" && d === "h";
-  const tabId = rnd ? "hasard" : THEMES.some(T => T.id === a) ? a : ["mots", "reviser", "ajouter", "paquet", "decouvrir"].includes(a) ? "mots" : a === "f" ? (findFiche(b) || { T: { id: "discours" } }).T.id : (a === "cartes" || a === "chaud") ? "discours" : ["repere", "euh", "essais", "micro"].includes(a) ? "voix" : "discours";
+  const tabId = rnd ? "hasard" : THEMES.some(T => T.id === a) ? a : ["mots", "reviser", "ajouter", "paquet", "decouvrir"].includes(a) ? "mots" : a === "f" ? (findFiche(b) || { T: { id: "discours" } }).T.id : (a === "cartes" || a === "chaud" || a === "euh") ? "discours" : ["repere", "essais", "micro"].includes(a) ? "voix" : "discours";
   $$(".tab").forEach(t => t.setAttribute("aria-current", t.dataset.go === tabId ? "page" : "false"));
   const T = THEMES.find(T => T.id === a);
   if (a === "f") renderFiche(b, c, rnd);
   else if (a === "cartes") startCards();
   else if (a === "chaud") renderQC();
   else if (a === "repere") renderRepere();
-  else if (a === "euh") renderEuh();
+  else if (a === "euh") location.replace("#chaud");
   else if (a === "essais") renderEssais();
   else if (a === "micro") renderMicTest();
   else if (a === "mots") renderMots();
